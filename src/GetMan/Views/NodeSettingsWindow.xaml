@@ -1,0 +1,76 @@
+<Window x:Class="GetMan.Views.NodeSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:GetMan.Services"
+        xmlns:ctl="clr-namespace:GetMan.Controls"
+        xmlns:views="clr-namespace:GetMan.Views"
+        Title="Collection settings" Height="620" Width="900"
+        Background="{DynamicResource Bg1}" Foreground="{DynamicResource Fg}"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="16,14,16,0">
+            <TextBlock x:Name="Heading" FontSize="16" FontWeight="SemiBold" />
+            <TextBlock x:Name="Subheading" Style="{StaticResource Caption}" Margin="0,4,0,0" />
+        </StackPanel>
+
+        <TabControl Grid.Row="1" Style="{StaticResource SubTabControl}" Margin="10,12,10,0">
+            <TabItem Header="{loc:T s.variables}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Style="{StaticResource Caption}" Margin="14,10,14,6" TextWrapping="Wrap"
+                               Text="{loc:T s.variables_defined_here_are_visible_to_every_53294}" />
+                    <ctl:KeyValueGrid Grid.Row="1" x:Name="VarGrid" ShowDescription="True" />
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="{loc:T s.authorization}">
+                <views:AuthView x:Name="Auth" />
+            </TabItem>
+
+            <TabItem Header="{loc:T s.pre_request_script}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Style="{StaticResource Caption}" Margin="14,10,14,6" TextWrapping="Wrap"
+                               Text="{loc:T s.runs_before_every_request_underneath_this_no_71138}" />
+                    <ctl:CodeEditor Grid.Row="1" x:Name="PreScript" SyntaxLanguage="javascript" />
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="{loc:T s.tests}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Style="{StaticResource Caption}" Margin="14,10,14,6" TextWrapping="Wrap"
+                               Text="{loc:T s.runs_after_every_response_underneath_this_no_49521}" />
+                    <ctl:CodeEditor Grid.Row="1" x:Name="TestScript" SyntaxLanguage="javascript" />
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="{loc:T s.description}">
+                <ctl:CodeEditor x:Name="DescriptionBox" SyntaxLanguage="text" />
+            </TabItem>
+        </TabControl>
+
+        <DockPanel Grid.Row="2" Margin="16,12">
+            <Button DockPanel.Dock="Left" Content="{loc:T s.export_as_postman_v2_1}" Click="OnExport" />
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                <Button Content="{loc:T s.cancel}" MinWidth="90" Margin="0,0,8,0" Click="OnCancel" />
+                <Button Content="{loc:T s.save}" MinWidth="110" Style="{StaticResource PrimaryButton}" Click="OnSave" />
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</Window>

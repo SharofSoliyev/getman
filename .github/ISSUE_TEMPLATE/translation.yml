@@ -1,0 +1,34 @@
+name: Translation
+description: A wrong, awkward or missing translation, or a new language
+labels: [i18n]
+body:
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options:
+        - Русский
+        - O'zbekcha
+        - English
+        - A language GetMan does not have yet
+    validations:
+      required: true
+
+  - type: textarea
+    id: strings
+    attributes:
+      label: What is wrong
+      description: >
+        The key from `src/GetMan/Assets/Lang/`, what it says now, and what it should say. Several
+        at once is fine.
+      placeholder: |
+        s.send — "Отправи" is cut off in the button
+        s.raw — "Xom" reads oddly; "Asl" would be better
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Where it appears
+      description: The window or panel, or a screenshot.

@@ -1,0 +1,34 @@
+<Window x:Class="GetMan.Views.VariableEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:GetMan.Services"
+        xmlns:ctl="clr-namespace:GetMan.Controls"
+        Title="Variables" Height="520" Width="820"
+        Background="{DynamicResource Bg1}" Foreground="{DynamicResource Fg}"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" x:Name="Heading" Text="{loc:T s.variables}" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10" />
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10" x:Name="NameRow" Visibility="Collapsed">
+            <TextBlock Text="{loc:T s.name}" Style="{StaticResource Caption}" Margin="0,0,10,0" />
+            <TextBox x:Name="NameBox" Width="280" />
+        </StackPanel>
+
+        <ctl:KeyValueGrid Grid.Row="2" x:Name="Grid" ShowDescription="True" />
+
+        <DockPanel Grid.Row="3" Margin="0,12,0,0">
+            <TextBlock DockPanel.Dock="Left" Style="{StaticResource Caption}" VerticalAlignment="Center"
+                       Text="{loc:T s.use_name_anywhere_in_a_request_to_substitute_27182}" />
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                <Button Content="{loc:T s.close}" MinWidth="90" Click="OnClose" Style="{StaticResource PrimaryButton}" />
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</Window>

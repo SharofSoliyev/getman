@@ -1,0 +1,34 @@
+<Window x:Class="GetMan.Views.ImportWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:GetMan.Services"
+        xmlns:ctl="clr-namespace:GetMan.Controls"
+        Title="Import" Height="560" Width="820"
+        Background="{DynamicResource Bg1}" Foreground="{DynamicResource Fg}"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock Text="{loc:T s.paste_raw_text}" FontSize="15" FontWeight="SemiBold" />
+            <TextBlock Style="{StaticResource Caption}" Margin="0,4,0,0" TextWrapping="Wrap"
+                       Text="{loc:T s.paste_a_postman_collection_or_environment_js_92059}" />
+        </StackPanel>
+
+        <Border Grid.Row="1" BorderBrush="{DynamicResource BorderBrushMain}" BorderThickness="1" CornerRadius="4">
+            <ctl:CodeEditor x:Name="Editor" SyntaxLanguage="json" />
+        </Border>
+
+        <DockPanel Grid.Row="2" Margin="0,12,0,0">
+            <Button DockPanel.Dock="Left" Content="{loc:T s.choose_file_instead}" Click="OnPickFile" />
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                <Button Content="{loc:T s.cancel}" MinWidth="90" Margin="0,0,8,0" Click="OnCancel" />
+                <Button Content="{loc:T s.import}" MinWidth="110" Style="{StaticResource PrimaryButton}" Click="OnImport" />
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</Window>

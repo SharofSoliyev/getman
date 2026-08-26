@@ -1,0 +1,67 @@
+name: Bug report
+description: Something in GetMan does not work the way it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please do not use this form for security problems — see
+        [SECURITY.md](https://github.com/SharofSoliyev/getman/blob/main/SECURITY.md).
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what GetMan did, and what you expected instead.
+      placeholder: |
+        1. Imported a v2.1 collection
+        2. Opened the third request
+        3. The Authorization tab was empty, but the collection sets a bearer token
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: GetMan version
+      description: Settings → About, or the version of the .exe you downloaded.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: "Windows 11 24H2"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: Interface language
+      options:
+        - English
+        - Русский
+        - O'zbekcha
+    validations:
+      required: false
+
+  - type: textarea
+    id: sample
+    attributes:
+      label: Sample collection
+      description: >
+        If the bug involves a specific collection, a trimmed-down export that still reproduces it
+        helps more than anything else. Please remove any real tokens first.
+      render: json
+
+  - type: textarea
+    id: crashlog
+    attributes:
+      label: Crash log
+      description: >
+        If GetMan crashed, paste `%APPDATA%\GetMan\crash.log` here — after checking it for anything
+        private.
+      render: text

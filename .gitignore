@@ -1,0 +1,13 @@
+bin/
+obj/
+dist/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+*.user
+*.suo
+*.userprefs
+
+# Local scratch
+*.log

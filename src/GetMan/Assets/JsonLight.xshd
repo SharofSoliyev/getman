@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SyntaxDefinition name="JsonLight" extensions=".json" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Bool" foreground="#0000FF" />
+  <Color name="Number" foreground="#098658" />
+  <Color name="String" foreground="#A31515" />
+  <Color name="Null" foreground="#0000FF" />
+  <Color name="FieldName" foreground="#0451A5" />
+  <Color name="Punctuation" foreground="#1F1F1F" />
+
+  <RuleSet name="String">
+    <Span begin="\\" end="." />
+  </RuleSet>
+
+  <RuleSet>
+    <Keywords color="Bool">
+      <Word>true</Word>
+      <Word>false</Word>
+    </Keywords>
+    <Keywords color="Null">
+      <Word>null</Word>
+    </Keywords>
+
+    <Span color="FieldName" ruleSet="String" multiline="false">
+      <Begin>"(?=[^"]*"\s*:)</Begin>
+      <End>"</End>
+    </Span>
+
+    <Span color="String" ruleSet="String" multiline="false">
+      <Begin>"</Begin>
+      <End>"</End>
+    </Span>
+
+    <Rule color="Number">
+      (?&lt;!\w)[\-]?\d+(\.\d+)?([eE][\+\-]?\d+)?(?!\w)
+    </Rule>
+
+    <Rule color="Punctuation">
+      [{}\[\],:]
+    </Rule>
+  </RuleSet>
+</SyntaxDefinition>

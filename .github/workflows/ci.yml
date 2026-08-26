@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Build
+        run: dotnet build GetMan.sln -c Release --nologo
+
+      # No network in CI, so the live HTTP section is skipped. Everything else runs.
+      - name: Service tests
+        run: dotnet run --project tools/SelfTest -c Release --no-build -- --offline
+
+      # Builds every window, compares the language tables against English, and drives the
+      # interaction flows. XAML errors only surface at run time, so this is what catches them.
+      - name: Window and interaction self-check
+        run: src/GetMan/bin/Release/net9.0-windows/GetMan.exe --self-check
+
+      - name: Publish single file
+        run: >
+          dotnet publish src/GetMan -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -o dist --nologo
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GetMan-win-x64
+          path: dist/GetMan.exe
+          if-no-files-found: error

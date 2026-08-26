@@ -1,0 +1,21 @@
+* text=auto eol=lf
+
+*.sln       text eol=crlf
+*.csproj    text eol=crlf
+*.xaml      text eol=crlf
+*.cs        text eol=crlf
+*.xshd      text eol=crlf
+*.ps1       text eol=crlf
+*.manifest  text eol=crlf
+
+*.json      text eol=lf
+*.md        text eol=lf
+*.yml       text eol=lf
+*.pl        text eol=lf
+
+*.png  binary
+*.ico  binary
+*.ttf  binary
+
+# Keep generated screenshots out of diffs and language stats.
+docs/images/*.png linguist-generated=true

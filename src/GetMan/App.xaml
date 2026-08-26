@@ -1,0 +1,39 @@
+<Application x:Class="GetMan.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:ctl="clr-namespace:GetMan.Controls"
+             xmlns:themes="clr-namespace:GetMan.Themes">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Material palette: green is the run action, sky is selection. -->
+                <materialDesign:CustomColorTheme BaseTheme="Dark" PrimaryColor="#22C55E" SecondaryColor="#38BDF8" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
+                <ResourceDictionary Source="Themes/Typography.xaml" />
+                <!-- Swapped at run time by ThemeManager. -->
+                <ResourceDictionary Source="Themes/Tokens.Dark.xaml" />
+                <themes:MotionResources />
+                <ResourceDictionary Source="Themes/Controls.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <ctl:InverseBoolConverter x:Key="InverseBool" />
+            <ctl:BoolToVisibilityConverter x:Key="BoolToVis" />
+            <ctl:NullToVisibilityConverter x:Key="NullToVis" />
+            <ctl:CountToVisibilityConverter x:Key="CountToVis" />
+            <ctl:EqualityConverter x:Key="Equality" />
+            <ctl:EqualityToVisibilityConverter x:Key="EqualityToVis" />
+            <ctl:MethodBrushConverter x:Key="MethodBrush" />
+            <ctl:TestStatusBrushConverter x:Key="TestStatusBrush" />
+            <ctl:TestStatusIconConverter x:Key="TestStatusIcon" />
+            <ctl:LogLevelBrushConverter x:Key="LogLevelBrush" />
+            <ctl:LogLevelIconConverter x:Key="LogLevelIcon" />
+            <ctl:StatusBrushConverter x:Key="StatusBrush" />
+            <ctl:NodeIconConverter x:Key="NodeIcon" />
+            <ctl:BytesConverter x:Key="Bytes" />
+            <ctl:MillisConverter x:Key="Millis" />
+            <ctl:BoolToBrushConverter x:Key="BoolToBrush" />
+            <ctl:DirtyMarkerConverter x:Key="DirtyMarker" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

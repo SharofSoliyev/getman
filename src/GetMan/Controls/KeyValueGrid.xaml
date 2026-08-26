@@ -1,0 +1,104 @@
+<UserControl x:Class="GetMan.Controls.KeyValueGrid"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:GetMan.Services"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             x:Name="Root">
+    <DataGrid x:Name="Grid"
+              ItemsSource="{Binding Rows, ElementName=Root}"
+              CanUserAddRows="True"
+              CanUserDeleteRows="True"
+              CanUserSortColumns="False"
+              CanUserReorderColumns="False"
+              SelectionUnit="Cell"
+              HeadersVisibility="Column"
+              BorderThickness="0"
+              Background="Transparent">
+        <DataGrid.Columns>
+            <DataGridTemplateColumn Width="42" CanUserResize="False">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <CheckBox IsChecked="{Binding Enabled, UpdateSourceTrigger=PropertyChanged}"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                                  ToolTip="{loc:T s.include_this_row_when_the_request_is_sent}" />
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+
+            <DataGridTemplateColumn Header="{loc:T s.key}" Width="1*">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <TextBox Text="{Binding Key, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource FlatTextBox}" FontFamily="{StaticResource MonoFont}" FontSize="12" />
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+
+            <DataGridTemplateColumn x:Name="TypeColumn" Header="{loc:T s.type}" Width="84" Visibility="Collapsed">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <ComboBox SelectedValue="{Binding Kind, UpdateSourceTrigger=PropertyChanged}"
+                                  ItemsSource="{Binding Kinds, ElementName=Root}"
+                                  Style="{StaticResource FlatComboBox}" FontSize="11.5" />
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+
+            <DataGridTemplateColumn Header="{loc:T s.value}" Width="1.4*">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <TextBox x:Name="ValueBox" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource FlatTextBox}" FontFamily="{StaticResource MonoFont}" FontSize="12" />
+                            <Grid x:Name="FilePart" Visibility="Collapsed">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding FilePath}" TextTrimming="CharacterEllipsis"
+                                           Foreground="{DynamicResource FgDim}" FontSize="11.5" Margin="4,0,0,0"
+                                           VerticalAlignment="Center" />
+                                <Button Grid.Column="1" Style="{StaticResource LinkButton}" Click="OnPickFile" Tag="{Binding}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="PaperclipPlus" Width="13" Height="13" VerticalAlignment="Center" />
+                                        <TextBlock Text="{loc:T s.file}" Margin="4,0,0,0" FontSize="11"
+                                                   Foreground="{DynamicResource Accent}" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Grid>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsFile}" Value="True">
+                                <Setter TargetName="ValueBox" Property="Visibility" Value="Collapsed" />
+                                <Setter TargetName="FilePart" Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+
+            <DataGridTemplateColumn x:Name="DescriptionColumn" Header="{loc:T s.description}" Width="1*">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource FlatTextBox}" FontSize="12" Foreground="{DynamicResource FgDim}" />
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+
+            <DataGridTemplateColumn Width="38" CanUserResize="False">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <Button Style="{StaticResource TinyIconBtn}" ToolTip="{loc:T s.remove_row}"
+                                Click="OnRemoveRow" Tag="{Binding}" HorizontalAlignment="Center">
+                            <materialDesign:PackIcon Kind="Close" Width="13" Height="13" />
+                        </Button>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+        </DataGrid.Columns>
+    </DataGrid>
+</UserControl>

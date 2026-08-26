@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SyntaxDefinition name="XmlLight" extensions=".xml;.html;.htm;.xhtml;.svg" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Comment" foreground="#008000" />
+  <Color name="CData" foreground="#AF00DB" />
+  <Color name="DocType" foreground="#0000FF" />
+  <Color name="Declaration" foreground="#0000FF" />
+  <Color name="Tag" foreground="#0000FF" />
+  <Color name="AttributeName" foreground="#E50000" />
+  <Color name="AttributeValue" foreground="#0451A5" />
+  <Color name="Entity" foreground="#795E26" />
+  <Color name="BrokenEntity" foreground="#CD3131" />
+
+  <RuleSet>
+    <Span color="Comment" multiline="true">
+      <Begin>&lt;!--</Begin>
+      <End>--&gt;</End>
+    </Span>
+    <Span color="CData" multiline="true">
+      <Begin>&lt;!\[CDATA\[</Begin>
+      <End>]]&gt;</End>
+    </Span>
+    <Span color="DocType" multiline="true">
+      <Begin>&lt;!DOCTYPE</Begin>
+      <End>&gt;</End>
+    </Span>
+    <Span color="Declaration" multiline="true">
+      <Begin>&lt;\?</Begin>
+      <End>\?&gt;</End>
+    </Span>
+    <Span color="Tag" multiline="true">
+      <Begin>&lt;</Begin>
+      <End>&gt;</End>
+      <RuleSet>
+        <Span color="AttributeValue" multiline="true">
+          <Begin>"</Begin>
+          <End>"</End>
+        </Span>
+        <Span color="AttributeValue" multiline="true">
+          <Begin>'</Begin>
+          <End>'</End>
+        </Span>
+        <Rule color="AttributeName">[\d\w_\-\.]+(?=(\s*=))</Rule>
+      </RuleSet>
+    </Span>
+    <Rule color="Entity">&amp;[\w\d\#]+;</Rule>
+  </RuleSet>
+</SyntaxDefinition>

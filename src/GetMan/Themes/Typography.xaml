@@ -1,0 +1,36 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+    <!--
+        Fira Sans for the interface, Fira Mono for anything code shaped. Both are embedded in
+        the assembly, with a system fallback after the comma in case the resource is missing.
+    -->
+    <FontFamily x:Key="UiFont">pack://application:,,,/GetMan;component/Resources/Fira/#Fira Sans, Segoe UI</FontFamily>
+    <FontFamily x:Key="UiFontMedium">pack://application:,,,/GetMan;component/Resources/Fira/#Fira Sans Medium, Segoe UI Semibold</FontFamily>
+    <FontFamily x:Key="UiFontSemi">pack://application:,,,/GetMan;component/Resources/Fira/#Fira Sans SemiBold, Segoe UI Semibold</FontFamily>
+    <FontFamily x:Key="MonoFont">pack://application:,,,/GetMan;component/Resources/Fira/#Fira Mono, Cascadia Mono, Consolas</FontFamily>
+
+    <!-- Type scale. Desktop density: one step tighter than a web scale. -->
+    <sys:Double x:Key="FsDisplay">22</sys:Double>
+    <sys:Double x:Key="FsTitle">16</sys:Double>
+    <sys:Double x:Key="FsSubtitle">14</sys:Double>
+    <sys:Double x:Key="FsBody">13</sys:Double>
+    <sys:Double x:Key="FsSmall">12</sys:Double>
+    <sys:Double x:Key="FsCaption">11.5</sys:Double>
+    <sys:Double x:Key="FsOverline">10</sys:Double>
+
+    <!-- Spacing scale (4 / 8 / 12 / 16 / 24). -->
+    <Thickness x:Key="PadXs">4</Thickness>
+    <Thickness x:Key="PadSm">8</Thickness>
+    <Thickness x:Key="PadMd">12</Thickness>
+    <Thickness x:Key="PadLg">16</Thickness>
+    <Thickness x:Key="PadXl">24</Thickness>
+
+    <!-- Corner radii. -->
+    <CornerRadius x:Key="RadSm">5</CornerRadius>
+    <CornerRadius x:Key="RadMd">8</CornerRadius>
+    <CornerRadius x:Key="RadLg">12</CornerRadius>
+    <CornerRadius x:Key="RadPill">999</CornerRadius>
+
+</ResourceDictionary>

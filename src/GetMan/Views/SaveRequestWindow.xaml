@@ -1,0 +1,48 @@
+<Window x:Class="GetMan.Views.SaveRequestWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:GetMan.Services"
+        xmlns:models="clr-namespace:GetMan.Models"
+        Title="Save request" Height="520" Width="620"
+        Background="{DynamicResource Bg1}" Foreground="{DynamicResource Fg}"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="{loc:T s.save_request}" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12" />
+
+        <StackPanel Grid.Row="1" Margin="0,0,0,12">
+            <TextBlock Text="{loc:T s.request_name}" Style="{StaticResource Caption}" Margin="0,0,0,4" />
+            <TextBox x:Name="NameBox" Height="30" />
+        </StackPanel>
+
+        <DockPanel Grid.Row="2">
+            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                <TextBlock Text="{loc:T s.save_to}" Style="{StaticResource Caption}" DockPanel.Dock="Left" />
+                <Button DockPanel.Dock="Right" HorizontalAlignment="Right" Content="{loc:T s.new_collection}"
+                        Style="{StaticResource LinkButton}" Click="OnNewCollection" />
+            </DockPanel>
+            <Border BorderBrush="{DynamicResource BorderBrushMain}" BorderThickness="1" CornerRadius="4" Padding="4">
+                <TreeView x:Name="Tree" SelectedItemChanged="OnSelected">
+                    <TreeView.ItemTemplate>
+                        <HierarchicalDataTemplate DataType="{x:Type models:CollectionNode}" ItemsSource="{Binding Children}">
+                            <TextBlock Text="{Binding Name}" Margin="2,0" />
+                        </HierarchicalDataTemplate>
+                    </TreeView.ItemTemplate>
+                </TreeView>
+            </Border>
+        </DockPanel>
+
+        <DockPanel Grid.Row="3" Margin="0,14,0,0">
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                <Button Content="{loc:T s.cancel}" MinWidth="90" Margin="0,0,8,0" Click="OnCancel" />
+                <Button x:Name="SaveButton" Content="{loc:T s.save}" MinWidth="110" Style="{StaticResource PrimaryButton}" Click="OnSave" />
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</Window>

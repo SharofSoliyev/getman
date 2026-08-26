@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>false</UseWindowsForms>
+    <AssemblyName>GetMan</AssemblyName>
+    <RootNamespace>GetMan</RootNamespace>
+    <ApplicationIcon>Assets\getman.ico</ApplicationIcon>
+    <Version>1.0.0</Version>
+    <Product>GetMan</Product>
+    <Company>GetMan</Company>
+    <Description>Native Windows API client - Postman alternative</Description>
+    <LangVersion>latest</LangVersion>
+    <NoWarn>$(NoWarn);CS0618;CS8632;NU1701</NoWarn>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <!-- Fira Sans for the interface and Fira Mono for anything code shaped, embedded so the
+       single-file build keeps its typography. Both are SIL Open Font License. -->
+  <ItemGroup>
+    <Resource Include="Resources\Fira\*.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Json.xshd" />
+    <EmbeddedResource Include="Assets\XmlDark.xshd" />
+    <EmbeddedResource Include="Assets\JavaScriptDark.xshd" />
+    <EmbeddedResource Include="Assets/JsonLight.xshd" />
+    <EmbeddedResource Include="Assets/XmlLight.xshd" />
+    <EmbeddedResource Include="Assets/JavaScriptLight.xshd" />
+    <EmbeddedResource Include="Assets/Lang/*.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Jint" Version="4.4.0" />
+    <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="MaterialDesignThemes" Version="5.3.2" />
+    <PackageReference Include="System.Text.Json" Version="9.0.2" />
+  </ItemGroup>
+
+</Project>

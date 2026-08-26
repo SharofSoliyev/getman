@@ -1,0 +1,285 @@
+<UserControl x:Class="GetMan.Views.RequestView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:GetMan.Services"
+             xmlns:ctl="clr-namespace:GetMan.Controls"
+             xmlns:views="clr-namespace:GetMan.Views"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             x:Name="Root">
+    <Grid Background="{DynamicResource Bg0}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ============================================== URL bar ==== -->
+        <Border Grid.Row="0" Padding="16,12" Background="{DynamicResource Bg1}"
+                BorderBrush="{DynamicResource BorderBrushSoft}" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <materialDesign:Card Grid.Column="0" UniformCornerRadius="8" Background="{DynamicResource Bg0}"
+                                     materialDesign:ElevationAssist.Elevation="Dp1" Padding="0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="1" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <ComboBox Grid.Column="0" Width="122" Height="38" Style="{StaticResource FlatComboBox}"
+                                  ItemsSource="{Binding Methods}" SelectedItem="{Binding Request.Method, Mode=TwoWay}"
+                                  Margin="6,0,0,0" ToolTip="{loc:T s.http_method}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" FontSize="12" FontFamily="{StaticResource UiFontMedium}"
+                                               Foreground="{Binding Converter={StaticResource MethodBrush}}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <Rectangle Grid.Column="1" Fill="{DynamicResource BorderBrushSoft}" Margin="0,8" />
+
+                        <Grid Grid.Column="2">
+                            <TextBox Style="{StaticResource FlatTextBox}" Height="38" Padding="12,0"
+                                     FontFamily="{StaticResource MonoFont}" FontSize="12.5"
+                                     VerticalContentAlignment="Center"
+                                     Text="{Binding Request.Url, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                     KeyDown="OnUrlKeyDown" x:Name="UrlBox" />
+                            <TextBlock Text="{loc:T s.enter_a_url}" IsHitTestVisible="False" Margin="14,0,0,0"
+                                       FontFamily="{StaticResource MonoFont}" FontSize="12.5"
+                                       Foreground="{DynamicResource FgMuted}" VerticalAlignment="Center"
+                                       Visibility="{Binding Request.Url, Converter={StaticResource NullToVis}, ConverterParameter=invert}" />
+                        </Grid>
+                    </Grid>
+                </materialDesign:Card>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="12,0,0,0">
+                    <Button MinWidth="104" Height="38" Padding="18,0" Style="{StaticResource PrimaryButton}"
+                            Command="{Binding SendCommand}" AutomationProperties.AutomationId="SendButton" ToolTip="{loc:T s.send_the_request_ctrl_enter}">
+                        <StackPanel Orientation="Horizontal">
+                            <!-- The paper plane nudges forward while the button is hovered. -->
+                            <materialDesign:PackIcon VerticalAlignment="Center" Width="17" Height="17"
+                                                     RenderTransformOrigin="0.5,0.5">
+                                <materialDesign:PackIcon.RenderTransform>
+                                    <TranslateTransform X="0" />
+                                </materialDesign:PackIcon.RenderTransform>
+                                <materialDesign:PackIcon.Style>
+                                    <Style TargetType="materialDesign:PackIcon">
+                                        <Setter Property="Kind" Value="Send" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSending}" Value="True">
+                                                <Setter Property="Kind" Value="StopCircleOutline" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                         Value="True">
+                                                <DataTrigger.EnterActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.X"
+                                                                             To="3.5" Duration="{StaticResource DurFast}"
+                                                                             EasingFunction="{StaticResource EaseOut}" />
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </DataTrigger.EnterActions>
+                                                <DataTrigger.ExitActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.X"
+                                                                             To="0" Duration="{StaticResource DurSlow}"
+                                                                             EasingFunction="{StaticResource EaseOut}" />
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </DataTrigger.ExitActions>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </materialDesign:PackIcon.Style>
+                            </materialDesign:PackIcon>
+                            <TextBlock Margin="7,0,0,0" FontFamily="{StaticResource UiFontMedium}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                        <Setter Property="Text" Value="{loc:T s.send}" />
+                                        <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSending}" Value="True">
+                                                <Setter Property="Text" Value="{loc:T s.cancel}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Height="38" Margin="8,0,0,0" ToolTip="{loc:T s.save_the_request_ctrl_s}" AutomationProperties.AutomationId="SaveButton"
+                            Command="{Binding DataContext.SaveTabCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ContentSaveOutline" Width="16" Height="16" VerticalAlignment="Center" />
+                            <TextBlock Text="{loc:T s.save}" Margin="6,0,0,0" Foreground="{DynamicResource Fg}" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource IconBtn}" Height="38" Width="38" Margin="8,0,0,0"
+                            ToolTip="{loc:T s.generate_a_code_snippet}" AutomationProperties.AutomationId="CodeButton"
+                            Command="{Binding DataContext.OpenCodeCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                        <materialDesign:PackIcon Kind="CodeTags" Width="19" Height="19" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ================================= request / response split ==== -->
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" MinHeight="130" />
+                <RowDefinition Height="5" />
+                <RowDefinition Height="1.1*" MinHeight="130" />
+            </Grid.RowDefinitions>
+
+            <TabControl Grid.Row="0" Style="{StaticResource SubTabControl}"
+                        SelectedIndex="{Binding ActiveSectionIndex, Mode=TwoWay}">
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{loc:T s.params}" />
+                            <Border Style="{StaticResource CountPill}"
+                                    Visibility="{Binding ParamCount, Converter={StaticResource CountToVis}}">
+                                <TextBlock Text="{Binding ParamCount}" Style="{StaticResource PillText}" />
+                            </Border>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="{loc:T s.query_params}" Style="{StaticResource SectionLabel}" Margin="16,12,0,4" />
+                        <ctl:KeyValueGrid Grid.Row="1" Rows="{Binding Request.QueryParams}" />
+                        <TextBlock Grid.Row="2" Text="{loc:T s.path_variables}" Style="{StaticResource SectionLabel}" Margin="16,14,0,4"
+                                   Visibility="{Binding Request.PathVariables.Count, Converter={StaticResource CountToVis}}" />
+                        <ctl:KeyValueGrid Grid.Row="3" Rows="{Binding Request.PathVariables}" MaxHeight="180"
+                                          Visibility="{Binding Request.PathVariables.Count, Converter={StaticResource CountToVis}}" />
+                    </Grid>
+                </TabItem>
+
+                <TabItem Header="{loc:T s.authorization}">
+                    <views:AuthView DataContext="{Binding Request.Auth}" />
+                </TabItem>
+
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{loc:T s.headers}" />
+                            <Border Style="{StaticResource CountPill}"
+                                    Visibility="{Binding HeaderCount, Converter={StaticResource CountToVis}}">
+                                <TextBlock Text="{Binding HeaderCount}" Style="{StaticResource PillText}" />
+                            </Border>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <ctl:KeyValueGrid Rows="{Binding Request.Headers}" />
+                </TabItem>
+
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{loc:T s.body}" />
+                            <Ellipse Width="6" Height="6" Margin="7,0,0,0" Fill="{DynamicResource Accent}"
+                                     VerticalAlignment="Center"
+                                     Visibility="{Binding Request.Body.Mode, Converter={StaticResource EqualityToVis}, ConverterParameter=None}" />
+                        </StackPanel>
+                    </TabItem.Header>
+                    <views:BodyView DataContext="{Binding}" />
+                </TabItem>
+
+                <TabItem Header="{loc:T s.pre_request}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="16,10,16,8">
+                            <materialDesign:PackIcon Kind="LanguageJavascript" Width="15" Height="15"
+                                                     Foreground="{DynamicResource FgMuted}" VerticalAlignment="Center" />
+                            <TextBlock Margin="7,0,0,0" Style="{StaticResource Caption}" TextWrapping="Wrap"
+                                       Text="{loc:T s.runs_before_the_request_is_sent_pm_environme_98803}" />
+                        </StackPanel>
+                        <ctl:CodeEditor Grid.Row="1" SyntaxLanguage="javascript"
+                                        BoundText="{Binding Request.PreRequestScript, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                    </Grid>
+                </TabItem>
+
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{loc:T s.tests}" />
+                            <Border Style="{StaticResource CountPill}"
+                                    Visibility="{Binding TestResults.Count, Converter={StaticResource CountToVis}}">
+                                <TextBlock Text="{Binding TestSummary}" Style="{StaticResource PillText}" />
+                            </Border>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="16,10,16,8">
+                            <materialDesign:PackIcon Kind="TestTube" Width="15" Height="15"
+                                                     Foreground="{DynamicResource FgMuted}" VerticalAlignment="Center" />
+                            <TextBlock Margin="7,0,0,0" Style="{StaticResource Caption}" TextWrapping="Wrap"
+                                       Text="{loc:T s.runs_after_the_response_arrives_use_pm_test_90282}" />
+                        </StackPanel>
+                        <ctl:CodeEditor Grid.Row="1" SyntaxLanguage="javascript"
+                                        BoundText="{Binding Request.TestScript, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                    </Grid>
+                </TabItem>
+
+                <TabItem Header="{loc:T s.settings}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="18,16">
+                            <TextBlock Text="{loc:T s.request_behaviour}" Style="{StaticResource SectionLabel}" />
+                            <CheckBox Content="{loc:T s.automatically_follow_redirects}" Margin="0,8"
+                                      IsChecked="{Binding Request.Settings.FollowRedirects}" />
+                            <CheckBox Content="{loc:T s.enable_ssl_certificate_verification}" Margin="0,8"
+                                      IsChecked="{Binding Request.Settings.VerifySsl}" />
+                            <CheckBox Content="{loc:T s.encode_url_automatically}" Margin="0,8"
+                                      IsChecked="{Binding Request.Settings.EncodeUrl}" />
+                            <CheckBox Content="{loc:T s.send_cookies_from_the_jar}" Margin="0,8"
+                                      IsChecked="{Binding Request.Settings.SendCookies}" />
+                            <CheckBox Content="{loc:T s.store_cookies_from_the_response}" Margin="0,8"
+                                      IsChecked="{Binding Request.Settings.StoreCookies}" />
+
+                            <WrapPanel Margin="0,16,0,0">
+                                <TextBox Width="150" Margin="0,0,14,12"
+                                         materialDesign:HintAssist.Hint="{loc:T s.maximum_redirects}"
+                                         Text="{Binding Request.Settings.MaxRedirects}" />
+                                <TextBox Width="180" Margin="0,0,14,12"
+                                         materialDesign:HintAssist.Hint="{loc:T s.timeout_in_ms_0_none}"
+                                         Text="{Binding Request.Settings.TimeoutMs}" />
+                                <ComboBox Width="150" Margin="0,0,14,12"
+                                          materialDesign:HintAssist.Hint="{loc:T s.http_version}"
+                                          ItemsSource="{Binding HttpVersions, ElementName=Root}"
+                                          SelectedValue="{Binding Request.Settings.HttpVersion, Mode=TwoWay}" />
+                            </WrapPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+
+            <GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                          ResizeBehavior="PreviousAndNext" />
+
+            <views:ResponseView Grid.Row="2" DataContext="{Binding}" />
+        </Grid>
+
+        <ProgressBar Grid.Row="1" VerticalAlignment="Top" IsIndeterminate="True" Height="3" Panel.ZIndex="3"
+                     Visibility="{Binding IsSending, Converter={StaticResource BoolToVis}}" />
+    </Grid>
+</UserControl>

@@ -1,0 +1,656 @@
+<Window x:Class="GetMan.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:GetMan.Services"
+        xmlns:models="clr-namespace:GetMan.Models"
+        xmlns:views="clr-namespace:GetMan.Views"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="GetMan" Height="880" Width="1480" MinWidth="980" MinHeight="600"
+        Background="{DynamicResource Bg1}" Foreground="{DynamicResource Fg}"
+        FontFamily="{StaticResource UiFont}"
+        WindowStartupLocation="CenterScreen"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Ideal"
+        TextElement.FontSize="13">
+
+    <Window.Resources>
+        <Style x:Key="TreeNodeItem" TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+            <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BoolToVis}}" />
+        </Style>
+
+        <HierarchicalDataTemplate x:Key="NodeTemplate" DataType="{x:Type models:CollectionNode}"
+                                  ItemsSource="{Binding Children}">
+            <Grid Margin="0,0,4,0" Background="Transparent" ToolTip="{Binding Description}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- method badge for requests, a folder icon for containers -->
+                <Border Grid.Column="0" Margin="2,0,9,0" Padding="5,1" CornerRadius="4"
+                        VerticalAlignment="Center" MinWidth="42"
+                        Visibility="{Binding IsRequest, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="{Binding MethodLabel}" FontSize="8.5" TextAlignment="Center"
+                               FontFamily="{StaticResource UiFontMedium}"
+                               Foreground="{Binding MethodLabel, Converter={StaticResource MethodBrush}}" />
+                </Border>
+                <materialDesign:PackIcon Grid.Column="0" Width="17" Height="17" Margin="19,0,9,0"
+                                         VerticalAlignment="Center"
+                                         Kind="{Binding Kind, Converter={StaticResource NodeIcon}}"
+                                         Foreground="{DynamicResource Accent}"
+                                         Visibility="{Binding IsContainer, Converter={StaticResource BoolToVis}}" />
+
+                <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
+                           Visibility="{Binding IsRenaming, Converter={StaticResource BoolToVis}, ConverterParameter=invert}" />
+                <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource FlatTextBox}" Background="{DynamicResource Bg0}"
+                         IsVisibleChanged="OnRenameBoxVisibleChanged" KeyDown="OnRenameKeyDown"
+                         LostFocus="OnRenameLostFocus"
+                         Visibility="{Binding IsRenaming, Converter={StaticResource BoolToVis}}" />
+            </Grid>
+        </HierarchicalDataTemplate>
+
+        <!-- one rail entry: icon over a very small label -->
+        <Style x:Key="RailContent" TargetType="StackPanel">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+    </Window.Resources>
+
+    <Window.InputBindings>
+        <KeyBinding Key="Return" Modifiers="Control" Command="{Binding SelectedTab.SendCommand}" />
+        <KeyBinding Key="S" Modifiers="Control" Command="{Binding SaveTabCommand}" CommandParameter="{Binding SelectedTab}" />
+        <KeyBinding Key="N" Modifiers="Control" Command="{Binding NewRequestCommand}" />
+        <KeyBinding Key="W" Modifiers="Control" Command="{Binding CloseTabCommand}" CommandParameter="{Binding SelectedTab}" />
+        <KeyBinding Key="O" Modifiers="Control" Command="{Binding ImportFileCommand}" />
+        <KeyBinding Key="E" Modifiers="Control" Command="{Binding OpenEnvironmentsCommand}" />
+        <KeyBinding Key="R" Modifiers="Control" Command="{Binding RunCollectionCommand}" CommandParameter="{Binding SelectedNode}" />
+        <KeyBinding Key="D" Modifiers="Control+Shift" Command="{Binding ToggleThemeCommand}" />
+    </Window.InputBindings>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ================================================= app bar ==== -->
+        <materialDesign:ColorZone Grid.Row="0" Mode="Standard" Background="{DynamicResource Bg2}"
+                                  materialDesign:ElevationAssist.Elevation="Dp3" Padding="14,0" Height="52"
+                                  Panel.ZIndex="2">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                    <Border Width="28" Height="28" CornerRadius="8" Background="{DynamicResource Action}">
+                        <materialDesign:PackIcon Kind="LightningBolt" Width="18" Height="18"
+                                                 Foreground="{DynamicResource OnAction}"
+                                                 HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="GetMan" FontSize="15" Margin="10,0,20,0"
+                               FontFamily="{StaticResource UiFontMedium}" />
+
+                    <Button Style="{StaticResource GhostButton}" Click="OnNewMenuClick" ToolTip="{loc:T s.create_something_new}"
+                            AutomationProperties.Name="{loc:T s.new}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Plus" Width="17" Height="17" VerticalAlignment="Center" />
+                            <TextBlock Text="{loc:T s.new}" Margin="6,0,2,0" />
+                            <materialDesign:PackIcon Kind="MenuDown" Width="14" Height="14" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Button.ContextMenu>
+                            <ContextMenu x:Name="NewMenu">
+                                <MenuItem Header="{loc:T s.request}" InputGestureText="Ctrl+N" Command="{Binding NewRequestCommand}">
+                                    <MenuItem.Icon><materialDesign:PackIcon Kind="Web" /></MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="{loc:T s.collection}" Command="{Binding NewCollectionCommand}">
+                                    <MenuItem.Icon><materialDesign:PackIcon Kind="FolderStarMultipleOutline" /></MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="{loc:T s.folder}" Command="{Binding NewFolderCommand}" CommandParameter="{Binding SelectedNode}">
+                                    <MenuItem.Icon><materialDesign:PackIcon Kind="FolderPlusOutline" /></MenuItem.Icon>
+                                </MenuItem>
+                                <Separator />
+                                <MenuItem Header="{loc:T s.environment}" Command="{Binding OpenEnvironmentsCommand}">
+                                    <MenuItem.Icon><materialDesign:PackIcon Kind="Earth" /></MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
+
+                    <Button Style="{StaticResource GhostButton}" Command="{Binding ImportFileCommand}"
+                            AutomationProperties.Name="{loc:T s.import}"
+                            ToolTip="{loc:T s.import_a_postman_collection_or_environment_c_69040}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="TrayArrowDown" Width="17" Height="17" VerticalAlignment="Center" />
+                            <TextBlock Text="{loc:T s.import}" Margin="6,0,0,0" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource GhostButton}" Command="{Binding ImportFromPostmanCommand}"
+                            AutomationProperties.Name="{loc:T s.import_from_postman}"
+                            ToolTip="{loc:T s.find_postman_exports_on_this_computer_or_pul_95421}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="RocketLaunchOutline" Width="16" Height="16" VerticalAlignment="Center" />
+                            <TextBlock Text="{loc:T s.from_postman}" Margin="6,0,0,0" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource GhostButton}" Command="{Binding ImportRawCommand}"
+                            AutomationProperties.Name="{loc:T s.paste_or_curl}"
+                            ToolTip="{loc:T s.import_from_pasted_text_or_a_curl_command}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ContentPaste" Width="16" Height="16" VerticalAlignment="Center" />
+                            <TextBlock Text="{loc:T s.paste_curl}" Margin="6,0,0,0" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <!-- active environment: a live dot plus the picker -->
+                    <Ellipse Width="8" Height="8" VerticalAlignment="Center" Margin="0,0,9,0"
+                             ToolTip="{loc:T s.an_environment_is_active}">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="{DynamicResource Action}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedEnvironment}" Value="{x:Null}">
+                                        <Setter Property="Fill" Value="{DynamicResource FgMuted}" />
+                                        <Setter Property="ToolTip" Value="{loc:T s.no_environment_selected}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+                    <ComboBox Width="196" ItemsSource="{Binding Environments}"
+                              SelectedItem="{Binding SelectedEnvironment, Mode=TwoWay}"
+                              DisplayMemberPath="Name"
+                              materialDesign:HintAssist.Hint="{loc:T s.active_environment}"
+                              AutomationProperties.Name="{loc:T s.active_environment}"
+                              ToolTip="{loc:T s.active_environment}" />
+
+                    <!-- Interface language. Bindings read the string table through an indexer,
+                         so picking a language repaints every label without a restart. -->
+                    <ComboBox Width="124" Margin="10,0,0,0" ItemsSource="{Binding Languages}"
+                              SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
+                              DisplayMemberPath="Name"
+                              materialDesign:HintAssist.Hint="{loc:T s.interface_language}"
+                              AutomationProperties.Name="{loc:T s.interface_language}"
+                              ToolTip="{loc:T s.interface_language}" />
+
+                    <Button Style="{StaticResource IconBtn}" Margin="8,0,0,0"
+                            Command="{Binding ToggleThemeCommand}"
+                            AutomationProperties.Name="{loc:T s.toggle_light_or_dark_theme}"
+                            ToolTip="{loc:T s.switch_between_the_light_and_dark_theme_ctrl_77153}">
+                        <materialDesign:PackIcon Width="19" Height="19">
+                            <materialDesign:PackIcon.Style>
+                                <Style TargetType="materialDesign:PackIcon">
+                                    <Setter Property="Kind" Value="WeatherNight" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsLightTheme}" Value="True">
+                                            <Setter Property="Kind" Value="WhiteBalanceSunny" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </materialDesign:PackIcon.Style>
+                        </materialDesign:PackIcon>
+                    </Button>
+                </StackPanel>
+            </DockPanel>
+        </materialDesign:ColorZone>
+
+        <!-- ==================================================== body ==== -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="278" MinWidth="210" />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="*" MinWidth="430" />
+            </Grid.ColumnDefinitions>
+
+            <!-- navigation rail -->
+            <Border Grid.Column="0" Width="72" Background="{DynamicResource Bg2}"
+                    BorderBrush="{DynamicResource BorderBrushSoft}" BorderThickness="0,0,1,0">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,10" HorizontalAlignment="Center">
+                        <Button Style="{StaticResource IconBtn}" Width="40" Height="40" Margin="0,3"
+                                Command="{Binding RunCollectionCommand}" CommandParameter="{Binding SelectedNode}"
+                                AutomationProperties.Name="{loc:T s.collection_runner}"
+                                ToolTip="{loc:T s.run_a_collection_ctrl_r}">
+                            <materialDesign:PackIcon Kind="PlayCircleOutline" Width="21" Height="21" />
+                        </Button>
+                        <Button Style="{StaticResource IconBtn}" Width="40" Height="40" Margin="0,3"
+                                Command="{Binding OpenCookiesCommand}"
+                                AutomationProperties.Name="{loc:T s.cookie_jar}" ToolTip="{loc:T s.cookie_jar}">
+                            <materialDesign:PackIcon Kind="Cookie" Width="21" Height="21" />
+                        </Button>
+                        <Button Style="{StaticResource IconBtn}" Width="40" Height="40" Margin="0,3"
+                                Command="{Binding OpenSettingsCommand}"
+                                AutomationProperties.Name="{loc:T s.settings}" ToolTip="{loc:T s.settings}">
+                            <materialDesign:PackIcon Kind="CogOutline" Width="21" Height="21" />
+                        </Button>
+                    </StackPanel>
+
+                    <ListBox x:Name="Rail" Margin="0,10,0,0" SelectedIndex="{Binding SidebarTabIndex, Mode=TwoWay}"
+                             ItemContainerStyle="{StaticResource RailItem}"
+                             AutomationProperties.Name="{loc:T s.sidebar_sections}">
+                        <ListBoxItem ToolTip="{loc:T s.collections}" AutomationProperties.Name="{loc:T s.collections}">
+                            <StackPanel Style="{StaticResource RailContent}">
+                                <materialDesign:PackIcon Kind="FolderMultipleOutline" Width="21" Height="21"
+                                                         HorizontalAlignment="Center" />
+                                <TextBlock Text="{loc:T s.collections}" FontSize="9" Margin="0,4,0,0"
+                                           HorizontalAlignment="Center"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem ToolTip="{loc:T s.environments}" AutomationProperties.Name="{loc:T s.environments}">
+                            <StackPanel Style="{StaticResource RailContent}">
+                                <materialDesign:PackIcon Kind="Earth" Width="21" Height="21"
+                                                         HorizontalAlignment="Center" />
+                                <TextBlock Text="{loc:T s.envs}" FontSize="9" Margin="0,4,0,0"
+                                           HorizontalAlignment="Center"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem ToolTip="{loc:T s.history}" AutomationProperties.Name="{loc:T s.history}">
+                            <StackPanel Style="{StaticResource RailContent}">
+                                <materialDesign:PackIcon Kind="History" Width="21" Height="21"
+                                                         HorizontalAlignment="Center" />
+                                <TextBlock Text="{loc:T s.history}" FontSize="9" Margin="0,4,0,0"
+                                           HorizontalAlignment="Center"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
+                            </StackPanel>
+                        </ListBoxItem>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+
+            <!-- sidebar panel -->
+            <Border Grid.Column="1" Background="{DynamicResource Bg1}">
+                <TabControl Style="{StaticResource HeaderlessTabControl}"
+                            SelectedIndex="{Binding SidebarTabIndex, Mode=TwoWay}">
+                    <!-- collections -->
+                    <TabItem>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="{loc:T s.collections}" Style="{StaticResource SectionLabel}"
+                                       Margin="16,16,0,8" />
+
+                            <StackPanel Grid.Row="1" Margin="12,0,12,8">
+                                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                         materialDesign:HintAssist.Hint="{loc:T s.search_requests}"
+                                         materialDesign:TextFieldAssist.HasLeadingIcon="True"
+                                         materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                                         materialDesign:TextFieldAssist.HasClearButton="True"
+                                         AutomationProperties.Name="{loc:T s.search_requests}" />
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                    <Button Style="{StaticResource LinkButton}" Command="{Binding NewCollectionCommand}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Plus" Width="14" Height="14" VerticalAlignment="Center" />
+                                            <TextBlock Text="{loc:T s.collection}" Margin="4,0,0,0" FontSize="11.5"
+                                                       Foreground="{DynamicResource Accent}" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Style="{StaticResource LinkButton}" Command="{Binding ImportFileCommand}" Margin="4,0,0,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="TrayArrowDown" Width="14" Height="14" VerticalAlignment="Center" />
+                                            <TextBlock Text="{loc:T s.import}" Margin="4,0,0,0" FontSize="11.5"
+                                                       Foreground="{DynamicResource Accent}" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <Grid Grid.Row="2">
+                                <TreeView x:Name="Tree" Margin="6,0,0,10"
+                                          ItemsSource="{Binding Collections}"
+                                          ItemTemplate="{StaticResource NodeTemplate}"
+                                          ItemContainerStyle="{StaticResource TreeNodeItem}"
+                                          SelectedItemChanged="OnTreeSelectionChanged"
+                                          MouseDoubleClick="OnTreeDoubleClick"
+                                          PreviewMouseLeftButtonDown="OnTreeMouseDown"
+                                          PreviewMouseMove="OnTreeMouseMove"
+                                          PreviewMouseRightButtonDown="OnTreeRightButtonDown"
+                                          KeyDown="OnTreeKeyDown"
+                                          Drop="OnTreeDrop" DragOver="OnTreeDragOver" AllowDrop="True">
+                                    <TreeView.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="{loc:T s.open}" Click="OnContextOpen">
+                                                <MenuItem.Icon><materialDesign:PackIcon Kind="OpenInNew" /></MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="{loc:T s.add_request}" Command="{Binding NewRequestInCommand}"
+                                                      CommandParameter="{Binding SelectedNode}">
+                                                <MenuItem.Icon><materialDesign:PackIcon Kind="PlusCircleOutline" /></MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="{loc:T s.add_folder}" Command="{Binding NewFolderCommand}"
+                                                      CommandParameter="{Binding SelectedNode}">
+                                                <MenuItem.Icon><materialDesign:PackIcon Kind="FolderPlusOutline" /></MenuItem.Icon>
+                                            </MenuItem>
+                                            <Separator />
+                                            <MenuItem Header="{loc:T s.rename}" InputGestureText="F2" Command="{Binding RenameNodeCommand}"
+                                                      CommandParameter="{Binding SelectedNode}">
+                                                <MenuItem.Icon><materialDesign:PackIcon Kind="RenameBox" /></MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="{loc:T s.duplicate}" Command="{Binding DuplicateNodeCommand}"
+                                                      CommandParameter="{Binding SelectedNode}">
+                                                <MenuItem.Icon><materialDesign:PackIcon Kind="ContentDuplicate" /></MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="{loc:T s.delete}" Command="{Binding DeleteNodeCommand}"
+                                                      CommandParameter="{Binding SelectedNode}">
+                                                <MenuItem.Icon><materialDesign:PackIcon Kind="DeleteOutline" /></MenuItem.Icon>
+                                            </MenuItem>
+                                            <Separator />
+                                            <MenuItem Header="{loc:T s.run_collection}" Command="{Binding RunCollectionCommand}"
+                                                      CommandParameter="{Binding SelectedNode}">
+                                                <MenuItem.Icon><materialDesign:PackIcon Kind="PlayCircleOutline" /></MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="{loc:T s.export_as_postman_v2_1}" Command="{Binding ExportCollectionCommand}"
+                                                      CommandParameter="{Binding SelectedNode}">
+                                                <MenuItem.Icon><materialDesign:PackIcon Kind="TrayArrowUp" /></MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="{loc:T s.settings_variables_auth_scripts}" Click="OnEditNodeVariables">
+                                                <MenuItem.Icon><materialDesign:PackIcon Kind="CogOutline" /></MenuItem.Icon>
+                                            </MenuItem>
+                                        </ContextMenu>
+                                    </TreeView.ContextMenu>
+                                </TreeView>
+
+                                <!-- empty state: tell the user what to do next -->
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20"
+                                            Visibility="{Binding Collections.Count, Converter={StaticResource CountToVis}, ConverterParameter=invert}">
+                                    <materialDesign:PackIcon Kind="FolderOpenOutline" Width="38" Height="38"
+                                                             HorizontalAlignment="Center" Foreground="{DynamicResource Bg4}" />
+                                    <TextBlock Text="{loc:T s.no_collections_yet}" Style="{StaticResource TitleText}"
+                                               HorizontalAlignment="Center" Margin="0,10,0,0" />
+                                    <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" TextAlignment="Center"
+                                               Margin="0,6,0,0" Text="{loc:T s.create_one_or_bring_your_postman_collections_94652}" />
+                                    <Button Style="{StaticResource PrimaryButton}" Margin="0,12,0,0" HorizontalAlignment="Center"
+                                            Command="{Binding ImportFromPostmanCommand}" Content="{loc:T s.import_from_postman}" />
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </TabItem>
+
+                    <!-- environments -->
+                    <TabItem>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Text="{loc:T s.environments}" Style="{StaticResource SectionLabel}"
+                                       Margin="16,16,0,8" />
+                            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="12,0,12,8">
+                                <Button Style="{StaticResource LinkButton}" Click="OnAddEnvironment" Content="{loc:T s.environment}" />
+                                <Button Style="{StaticResource LinkButton}" Margin="4,0,0,0" Click="OnEditGlobals" Content="{loc:T s.globals}" />
+                                <Button Style="{StaticResource LinkButton}" Margin="4,0,0,0"
+                                        Command="{Binding OpenEnvironmentsCommand}" Content="{loc:T s.manage}" />
+                            </StackPanel>
+                            <ListBox Grid.Row="2" ItemsSource="{Binding Environments}" Margin="10,0,10,10"
+                                     SelectedItem="{Binding SelectedEnvironment, Mode=TwoWay}"
+                                     MouseDoubleClick="OnEnvironmentDoubleClick"
+                                     AutomationProperties.Name="{loc:T s.environments}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <DockPanel>
+                                            <materialDesign:PackIcon Kind="Earth" Width="15" Height="15" DockPanel.Dock="Left"
+                                                                     VerticalAlignment="Center" Margin="0,0,8,0"
+                                                                     Foreground="{DynamicResource FgMuted}" />
+                                            <Border DockPanel.Dock="Right" Style="{StaticResource CountPill}">
+                                                <TextBlock Text="{Binding Variables.Count}" Style="{StaticResource PillText}" />
+                                            </Border>
+                                            <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </TabItem>
+
+                    <!-- history -->
+                    <TabItem>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Text="{loc:T s.history}" Style="{StaticResource SectionLabel}"
+                                       Margin="16,16,0,8" />
+                            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="12,0,12,8">
+                                <Button Style="{StaticResource LinkButton}" Command="{Binding ClearHistoryCommand}"
+                                        Content="{loc:T s.clear_history}" />
+                            </StackPanel>
+                            <Grid Grid.Row="2">
+                                <ListBox ItemsSource="{Binding History}" Margin="10,0,10,10"
+                                         MouseDoubleClick="OnHistoryDoubleClick" x:Name="HistoryList"
+                                         AutomationProperties.Name="{loc:T s.request_history}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding Method}" FontSize="9" MinWidth="42"
+                                                               FontFamily="{StaticResource UiFontMedium}"
+                                                               Foreground="{Binding Method, Converter={StaticResource MethodBrush}}" />
+                                                    <TextBlock Text="{Binding StatusCode}" FontSize="10.5" Margin="6,0,0,0"
+                                                               FontFamily="{StaticResource UiFontMedium}"
+                                                               Foreground="{Binding StatusCode, Converter={StaticResource StatusBrush}}" />
+                                                    <TextBlock Text="{Binding DisplayTime}" Style="{StaticResource Caption}"
+                                                               Margin="8,0,0,0" FontSize="10.5" />
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding Url}" Style="{StaticResource Caption}" FontSize="11"
+                                                           TextTrimming="CharacterEllipsis" Margin="0,3,0,0" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20"
+                                            Visibility="{Binding History.Count, Converter={StaticResource CountToVis}, ConverterParameter=invert}">
+                                    <materialDesign:PackIcon Kind="History" Width="34" Height="34"
+                                                             HorizontalAlignment="Center" Foreground="{DynamicResource Bg4}" />
+                                    <TextBlock Text="{loc:T s.nothing_sent_yet}" Style="{StaticResource Caption}"
+                                               HorizontalAlignment="Center" Margin="0,10,0,0" />
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </TabItem>
+                </TabControl>
+            </Border>
+
+            <GridSplitter Grid.Column="2" Width="5" HorizontalAlignment="Stretch" />
+
+            <!-- request tabs -->
+            <TabControl Grid.Column="3" ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
+                        Background="{DynamicResource Bg0}" BorderThickness="0" Padding="0">
+                <TabControl.Template>
+                    <ControlTemplate TargetType="TabControl">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Border Grid.Row="0" Background="{DynamicResource Bg2}"
+                                    BorderBrush="{DynamicResource BorderBrushSoft}" BorderThickness="0,0,0,1">
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Style="{StaticResource IconBtn}" Margin="4,0,8,0"
+                                            Command="{Binding NewRequestCommand}"
+                                            AutomationProperties.Name="{loc:T s.new_request}"
+                                            ToolTip="{loc:T s.new_request_ctrl_n}">
+                                        <materialDesign:PackIcon Kind="Plus" Width="19" Height="19" />
+                                    </Button>
+                                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                        <TabPanel IsItemsHost="True" Margin="6,5,0,0" />
+                                    </ScrollViewer>
+                                </DockPanel>
+                            </Border>
+                            <ContentPresenter Grid.Row="1" ContentSource="SelectedContent" />
+                        </Grid>
+                    </ControlTemplate>
+                </TabControl.Template>
+
+                <TabControl.ItemContainerStyle>
+                    <Style TargetType="TabItem">
+                        <Setter Property="Cursor" Value="Hand" />
+                        <Setter Property="FocusVisualStyle" Value="{StaticResource RingFocus}" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="TabItem">
+                                    <Grid Margin="0,0,3,0" MaxWidth="250" Background="Transparent">
+                                        <Border x:Name="hover" Background="{DynamicResource Bg3}"
+                                                CornerRadius="9,9,0,0" Opacity="0" />
+                                        <Border x:Name="sel" Background="{DynamicResource Bg0}"
+                                                CornerRadius="9,9,0,0" Opacity="0" />
+                                        <Border x:Name="bar" Height="2.5" VerticalAlignment="Top" Margin="10,0,10,0"
+                                                Background="{DynamicResource Accent}" CornerRadius="0,0,2,2"
+                                                Opacity="0" RenderTransformOrigin="0.5,0.5">
+                                            <Border.RenderTransform>
+                                                <ScaleTransform ScaleX="0" />
+                                            </Border.RenderTransform>
+                                        </Border>
+                                        <ContentPresenter ContentSource="Header" VerticalAlignment="Center"
+                                                          Margin="13,8" />
+                                    </Grid>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Trigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetName="hover" Storyboard.TargetProperty="Opacity"
+                                                                         To="1" Duration="{StaticResource DurFast}"
+                                                                         EasingFunction="{StaticResource EaseOut}" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </Trigger.EnterActions>
+                                            <Trigger.ExitActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetName="hover" Storyboard.TargetProperty="Opacity"
+                                                                         To="0" Duration="{StaticResource DurSlow}"
+                                                                         EasingFunction="{StaticResource EaseOut}" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </Trigger.ExitActions>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Trigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetName="sel" Storyboard.TargetProperty="Opacity"
+                                                                         To="1" Duration="{StaticResource DurFast}"
+                                                                         EasingFunction="{StaticResource EaseOut}" />
+                                                        <DoubleAnimation Storyboard.TargetName="bar" Storyboard.TargetProperty="Opacity"
+                                                                         To="1" Duration="{StaticResource DurFast}"
+                                                                         EasingFunction="{StaticResource EaseOut}" />
+                                                        <DoubleAnimation Storyboard.TargetName="bar"
+                                                                         Storyboard.TargetProperty="RenderTransform.ScaleX"
+                                                                         To="1" Duration="{StaticResource DurPop}"
+                                                                         EasingFunction="{StaticResource EaseOut}" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </Trigger.EnterActions>
+                                            <Trigger.ExitActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetName="sel" Storyboard.TargetProperty="Opacity"
+                                                                         To="0" Duration="{StaticResource DurSlow}"
+                                                                         EasingFunction="{StaticResource EaseOut}" />
+                                                        <DoubleAnimation Storyboard.TargetName="bar" Storyboard.TargetProperty="Opacity"
+                                                                         To="0" Duration="{StaticResource DurFast}"
+                                                                         EasingFunction="{StaticResource EaseOut}" />
+                                                        <DoubleAnimation Storyboard.TargetName="bar"
+                                                                         Storyboard.TargetProperty="RenderTransform.ScaleX"
+                                                                         To="0" Duration="{StaticResource DurFast}"
+                                                                         EasingFunction="{StaticResource EaseOut}" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </Trigger.ExitActions>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </TabControl.ItemContainerStyle>
+
+                <TabControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Request.Method}" FontSize="8.5" Margin="0,0,8,0"
+                                       FontFamily="{StaticResource UiFontMedium}"
+                                       Foreground="{Binding Request.Method, Converter={StaticResource MethodBrush}}" />
+                            <TextBlock Text="{Binding Title}" MaxWidth="150" TextTrimming="CharacterEllipsis" FontSize="12.5" />
+                            <Ellipse Width="6" Height="6" Margin="7,0,0,0" Fill="{DynamicResource Accent}"
+                                     VerticalAlignment="Center"
+                                     Visibility="{Binding IsDirty, Converter={StaticResource BoolToVis}}" />
+                            <!-- The close button stays faint until the tab is hovered. -->
+                            <Button Margin="7,0,0,0" ToolTip="{loc:T s.close_tab}" AutomationProperties.Name="{loc:T s.close_tab}"
+                                    Command="{Binding DataContext.CloseTabCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource TinyIconBtn}">
+                                        <Setter Property="Opacity" Value="0.3" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=TabItem}}"
+                                                         Value="True">
+                                                <DataTrigger.EnterActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1"
+                                                                             Duration="{StaticResource DurFast}"
+                                                                             EasingFunction="{StaticResource EaseOut}" />
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </DataTrigger.EnterActions>
+                                                <DataTrigger.ExitActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" To="0.3"
+                                                                             Duration="{StaticResource DurSlow}"
+                                                                             EasingFunction="{StaticResource EaseOut}" />
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </DataTrigger.ExitActions>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <materialDesign:PackIcon Kind="Close" Width="13" Height="13" />
+                            </Button>
+                        </StackPanel>
+                    </DataTemplate>
+                </TabControl.ItemTemplate>
+
+                <TabControl.ContentTemplate>
+                    <DataTemplate>
+                        <views:RequestView />
+                    </DataTemplate>
+                </TabControl.ContentTemplate>
+            </TabControl>
+        </Grid>
+
+        <!-- =============================================== status bar ==== -->
+        <Border Grid.Row="2" Background="{DynamicResource Bg2}" BorderBrush="{DynamicResource BorderBrushSoft}"
+                BorderThickness="0,1,0,0" Padding="14,0" Height="30">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                    <materialDesign:PackIcon Kind="InformationOutline" Width="14" Height="14"
+                                             Foreground="{DynamicResource FgMuted}" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource Caption}" Margin="7,0,0,0"
+                               TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <materialDesign:PackIcon Kind="FolderMultipleOutline" Width="13" Height="13"
+                                             Foreground="{DynamicResource FgMuted}" VerticalAlignment="Center" />
+                    <TextBlock Style="{StaticResource Caption}" Margin="6,0,0,0" Text="{Binding Collections.Count}"
+                               ToolTip="{loc:T s.collections}" />
+                    <materialDesign:PackIcon Kind="TabPlus" Width="13" Height="13" Margin="16,0,0,0"
+                                             Foreground="{DynamicResource FgMuted}" VerticalAlignment="Center" />
+                    <TextBlock Style="{StaticResource Caption}" Margin="6,0,0,0" Text="{Binding Tabs.Count}"
+                               ToolTip="{loc:T s.open_tabs}" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,87 @@
+<UserControl x:Class="GetMan.Views.BodyView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:GetMan.Services"
+             xmlns:ctl="clr-namespace:GetMan.Controls"
+             x:Name="Root">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Padding="14,8" BorderBrush="{DynamicResource BorderBrushSoft}" BorderThickness="0,0,0,1">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                    <RadioButton Content="{loc:T s.none}" GroupName="bodymode" Margin="0,0,14,0"
+                                 IsChecked="{Binding Request.Body.Mode, Converter={StaticResource Equality}, ConverterParameter=None, Mode=TwoWay}" />
+                    <RadioButton Content="{loc:T s.form_data}" GroupName="bodymode" Margin="0,0,14,0"
+                                 IsChecked="{Binding Request.Body.Mode, Converter={StaticResource Equality}, ConverterParameter=FormData, Mode=TwoWay}" />
+                    <RadioButton Content="{loc:T s.x_www_form_urlencoded}" GroupName="bodymode" Margin="0,0,14,0"
+                                 IsChecked="{Binding Request.Body.Mode, Converter={StaticResource Equality}, ConverterParameter=UrlEncoded, Mode=TwoWay}" />
+                    <RadioButton Content="{loc:T s.raw}" GroupName="bodymode" Margin="0,0,14,0"
+                                 IsChecked="{Binding Request.Body.Mode, Converter={StaticResource Equality}, ConverterParameter=Raw, Mode=TwoWay}" />
+                    <RadioButton Content="{loc:T s.binary}" GroupName="bodymode" Margin="0,0,14,0"
+                                 IsChecked="{Binding Request.Body.Mode, Converter={StaticResource Equality}, ConverterParameter=Binary, Mode=TwoWay}" />
+                    <RadioButton Content="{loc:T s.graphql}" GroupName="bodymode" Margin="0,0,14,0"
+                                 IsChecked="{Binding Request.Body.Mode, Converter={StaticResource Equality}, ConverterParameter=GraphQL, Mode=TwoWay}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right"
+                            Visibility="{Binding Request.Body.Mode, Converter={StaticResource EqualityToVis}, ConverterParameter=Raw}">
+                    <ComboBox Width="110" Height="24" ItemsSource="{Binding BodyLanguages}"
+                              SelectedItem="{Binding Request.Body.RawLanguage, Mode=TwoWay}" />
+                    <Button Content="{loc:T s.beautify}" Style="{StaticResource LinkButton}" Margin="8,0,0,0"
+                            Command="{Binding BeautifyBodyCommand}" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <!-- none -->
+            <TextBlock Text="{loc:T s.this_request_does_not_have_a_body}" Style="{StaticResource Caption}"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Visibility="{Binding Request.Body.Mode, Converter={StaticResource EqualityToVis}, ConverterParameter=None}" />
+
+            <!-- raw -->
+            <ctl:CodeEditor BoundText="{Binding Request.Body.Raw, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                            SyntaxLanguage="{Binding Request.Body.RawLanguage}"
+                            Visibility="{Binding Request.Body.Mode, Converter={StaticResource EqualityToVis}, ConverterParameter=Raw}" />
+
+            <!-- form-data -->
+            <ctl:KeyValueGrid Rows="{Binding Request.Body.FormData}" AllowFiles="True"
+                              Visibility="{Binding Request.Body.Mode, Converter={StaticResource EqualityToVis}, ConverterParameter=FormData}" />
+
+            <!-- urlencoded -->
+            <ctl:KeyValueGrid Rows="{Binding Request.Body.UrlEncoded}"
+                              Visibility="{Binding Request.Body.Mode, Converter={StaticResource EqualityToVis}, ConverterParameter=UrlEncoded}" />
+
+            <!-- binary -->
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Visibility="{Binding Request.Body.Mode, Converter={StaticResource EqualityToVis}, ConverterParameter=Binary}">
+                <TextBlock Text="{Binding Request.Body.BinaryPath}" Style="{StaticResource Caption}"
+                           HorizontalAlignment="Center" MaxWidth="500" TextTrimming="CharacterEllipsis" />
+                <Button Content="{loc:T s.select_file}" Margin="0,10,0,0" HorizontalAlignment="Center" Click="OnPickBinary" />
+            </StackPanel>
+
+            <!-- GraphQL -->
+            <Grid Visibility="{Binding Request.Body.Mode, Converter={StaticResource EqualityToVis}, ConverterParameter=GraphQL}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="4" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+                <DockPanel Grid.Column="0">
+                    <TextBlock DockPanel.Dock="Top" Text="{loc:T s.query}" Style="{StaticResource SectionLabel}" Margin="12,8,0,4" />
+                    <ctl:CodeEditor BoundText="{Binding Request.Body.GraphQlQuery, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                    SyntaxLanguage="javascript" />
+                </DockPanel>
+                <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Stretch" />
+                <DockPanel Grid.Column="2">
+                    <TextBlock DockPanel.Dock="Top" Text="{loc:T s.graphql_variables}" Style="{StaticResource SectionLabel}" Margin="12,8,0,4" />
+                    <ctl:CodeEditor BoundText="{Binding Request.Body.GraphQlVariables, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                    SyntaxLanguage="json" />
+                </DockPanel>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

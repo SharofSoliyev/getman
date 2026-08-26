@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SyntaxDefinition name="JavaScriptLight" extensions=".js" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Comment" foreground="#008000" />
+  <Color name="String" foreground="#A31515" />
+  <Color name="Keyword" foreground="#0000FF" />
+  <Color name="Control" foreground="#AF00DB" />
+  <Color name="Number" foreground="#098658" />
+  <Color name="Pm" foreground="#267F99" />
+  <Color name="Function" foreground="#795E26" />
+  <Color name="Literal" foreground="#0000FF" />
+
+  <RuleSet ignoreCase="false">
+    <Span color="Comment">
+      <Begin>//</Begin>
+    </Span>
+    <Span color="Comment" multiline="true">
+      <Begin>/\*</Begin>
+      <End>\*/</End>
+    </Span>
+    <Span color="String" multiline="false">
+      <Begin>"</Begin>
+      <End>"</End>
+      <RuleSet>
+        <Span begin="\\" end="." />
+      </RuleSet>
+    </Span>
+    <Span color="String" multiline="false">
+      <Begin>'</Begin>
+      <End>'</End>
+      <RuleSet>
+        <Span begin="\\" end="." />
+      </RuleSet>
+    </Span>
+    <Span color="String" multiline="true">
+      <Begin>`</Begin>
+      <End>`</End>
+      <RuleSet>
+        <Span begin="\\" end="." />
+      </RuleSet>
+    </Span>
+
+    <Keywords color="Control">
+      <Word>if</Word><Word>else</Word><Word>for</Word><Word>while</Word><Word>do</Word>
+      <Word>switch</Word><Word>case</Word><Word>break</Word><Word>continue</Word>
+      <Word>return</Word><Word>throw</Word><Word>try</Word><Word>catch</Word><Word>finally</Word>
+      <Word>await</Word><Word>async</Word><Word>yield</Word>
+    </Keywords>
+
+    <Keywords color="Keyword">
+      <Word>var</Word><Word>let</Word><Word>const</Word><Word>function</Word><Word>new</Word>
+      <Word>class</Word><Word>extends</Word><Word>this</Word><Word>typeof</Word><Word>instanceof</Word>
+      <Word>in</Word><Word>of</Word><Word>delete</Word><Word>void</Word><Word>super</Word>
+    </Keywords>
+
+    <Keywords color="Literal">
+      <Word>true</Word><Word>false</Word><Word>null</Word><Word>undefined</Word><Word>NaN</Word>
+    </Keywords>
+
+    <Keywords color="Pm">
+      <Word>pm</Word><Word>postman</Word><Word>console</Word><Word>JSON</Word><Word>Math</Word>
+      <Word>Date</Word><Word>Object</Word><Word>Array</Word><Word>String</Word><Word>Number</Word>
+      <Word>tests</Word><Word>responseBody</Word><Word>responseCode</Word><Word>environment</Word>
+      <Word>globals</Word><Word>data</Word>
+    </Keywords>
+
+    <Rule color="Function">\b[\w_]+(?=\s*\()</Rule>
+    <Rule color="Number">\b0[xX][0-9a-fA-F]+|(\b\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?</Rule>
+  </RuleSet>
+</SyntaxDefinition>

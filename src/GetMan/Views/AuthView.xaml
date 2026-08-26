@@ -1,0 +1,246 @@
+<UserControl x:Class="GetMan.Views.AuthView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:GetMan.Services"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             x:Name="Root">
+    <UserControl.Resources>
+        <!--
+            One field style for the whole page. Every input is a floating-hint outlined box of
+            the same width sitting in a WrapPanel, so the gutters are identical everywhere and
+            the form reflows to one or two columns with the pane. Spacing follows the 4/8/16/20
+            scale from the design system.
+        -->
+        <Style x:Key="AuthField" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Width" Value="304" />
+            <Setter Property="Margin" Value="0,0,16,16" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+
+        <Style x:Key="AuthFieldWide" TargetType="TextBox" BasedOn="{StaticResource AuthField}">
+            <Setter Property="Width" Value="624" />
+        </Style>
+
+        <Style x:Key="AuthCombo" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="Width" Value="304" />
+            <Setter Property="Margin" Value="0,0,16,16" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+        </Style>
+
+        <!-- A labelled block for choices that are not a single input. -->
+        <Style x:Key="ChoiceBlock" TargetType="StackPanel">
+            <Setter Property="Margin" Value="0,0,16,16" />
+        </Style>
+
+        <Style x:Key="ChoiceLabel" TargetType="TextBlock" BasedOn="{StaticResource SectionLabel}">
+            <Setter Property="Margin" Value="0,0,0,6" />
+        </Style>
+
+        <Style x:Key="AuthNote" TargetType="TextBlock" BasedOn="{StaticResource Caption}">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="MaxWidth" Value="624" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+        </Style>
+
+        <Style x:Key="AuthSection" TargetType="StackPanel">
+            <Setter Property="Margin" Value="0,4,0,0" />
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="20,18,20,20">
+
+            <!-- type picker -->
+            <TextBlock Text="{loc:T s.authorization}" Style="{StaticResource SectionLabel}" />
+            <WrapPanel Margin="0,8,0,0">
+                <ComboBox Style="{StaticResource AuthCombo}"
+                          materialDesign:HintAssist.Hint="{loc:T s.auth_type}"
+                          AutomationProperties.Name="{loc:T s.auth_type}"
+                          ItemsSource="{Binding AuthTypes, ElementName=Root}"
+                          SelectedItem="{Binding Type, Mode=TwoWay}" />
+                <TextBlock Style="{StaticResource AuthNote}" VerticalAlignment="Center" MaxWidth="320"
+                           Margin="0,0,0,16"
+                           Text="{loc:T s.inherit_takes_the_auth_configured_on_the_par_44403}"
+                           Visibility="{Binding Type, Converter={StaticResource EqualityToVis}, ConverterParameter=Inherit}" />
+                <TextBlock Style="{StaticResource AuthNote}" VerticalAlignment="Center" MaxWidth="320"
+                           Margin="0,0,0,16"
+                           Text="{loc:T s.this_request_does_not_send_an_authorization_62757}"
+                           Visibility="{Binding Type, Converter={StaticResource EqualityToVis}, ConverterParameter=None}" />
+            </WrapPanel>
+
+            <!-- Bearer -->
+            <StackPanel Style="{StaticResource AuthSection}"
+                        Visibility="{Binding Type, Converter={StaticResource EqualityToVis}, ConverterParameter=Bearer}">
+                <WrapPanel>
+                    <TextBox Style="{StaticResource AuthFieldWide}" materialDesign:HintAssist.Hint="{loc:T s.token}"
+                             AutomationProperties.Name="{loc:T s.bearer_token}"
+                             Text="{Binding Token, UpdateSourceTrigger=PropertyChanged}" />
+                </WrapPanel>
+                <TextBlock Style="{StaticResource AuthNote}"
+                           Text="{loc:T s.sent_as_authorization_bearer_token_variables_96250}" />
+            </StackPanel>
+
+            <!-- Basic -->
+            <StackPanel Style="{StaticResource AuthSection}"
+                        Visibility="{Binding Type, Converter={StaticResource EqualityToVis}, ConverterParameter=Basic}">
+                <WrapPanel>
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.username}"
+                             AutomationProperties.Name="{loc:T s.username}"
+                             Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.password}"
+                             AutomationProperties.Name="{loc:T s.password}"
+                             Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}" />
+                </WrapPanel>
+            </StackPanel>
+
+            <!-- API key -->
+            <StackPanel Style="{StaticResource AuthSection}"
+                        Visibility="{Binding Type, Converter={StaticResource EqualityToVis}, ConverterParameter=ApiKey}">
+                <WrapPanel>
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.key}"
+                             AutomationProperties.Name="{loc:T s.api_key_name}"
+                             Text="{Binding ApiKeyName, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.value}"
+                             AutomationProperties.Name="{loc:T s.api_key_value}"
+                             Text="{Binding ApiKeyValue, UpdateSourceTrigger=PropertyChanged}" />
+                    <StackPanel Style="{StaticResource ChoiceBlock}">
+                        <TextBlock Text="{loc:T s.add_to}" Style="{StaticResource ChoiceLabel}" />
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton Content="{loc:T s.header}" GroupName="apikeyloc" Margin="0,0,20,0"
+                                         IsChecked="{Binding ApiKeyLocation, Converter={StaticResource Equality}, ConverterParameter=header, Mode=TwoWay}" />
+                            <RadioButton Content="{loc:T s.query_params}" GroupName="apikeyloc"
+                                         IsChecked="{Binding ApiKeyLocation, Converter={StaticResource Equality}, ConverterParameter=query, Mode=TwoWay}" />
+                        </StackPanel>
+                    </StackPanel>
+                </WrapPanel>
+            </StackPanel>
+
+            <!-- Digest / NTLM -->
+            <StackPanel>
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel" BasedOn="{StaticResource AuthSection}">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Type}" Value="Digest">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Type}" Value="NTLM">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <WrapPanel>
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.username}"
+                             AutomationProperties.Name="{loc:T s.username}"
+                             Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.password}"
+                             AutomationProperties.Name="{loc:T s.password}"
+                             Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.domain}"
+                             AutomationProperties.Name="{loc:T s.domain}"
+                             Text="{Binding Domain, UpdateSourceTrigger=PropertyChanged}" />
+                    <ComboBox Style="{StaticResource AuthCombo}" materialDesign:HintAssist.Hint="{loc:T s.algorithm}"
+                              AutomationProperties.Name="{loc:T s.digest_algorithm}"
+                              SelectedValue="{Binding DigestAlgorithm, Mode=TwoWay}"
+                              ItemsSource="{Binding DigestAlgorithms, ElementName=Root}" />
+                </WrapPanel>
+                <TextBlock Style="{StaticResource AuthNote}"
+                           Text="{loc:T s.digest_answers_the_server_s_challenge_on_a_s_91327}" />
+            </StackPanel>
+
+            <!-- OAuth 2.0 -->
+            <StackPanel Style="{StaticResource AuthSection}"
+                        Visibility="{Binding Type, Converter={StaticResource EqualityToVis}, ConverterParameter=OAuth2}">
+                <WrapPanel>
+                    <ComboBox Style="{StaticResource AuthCombo}" materialDesign:HintAssist.Hint="{loc:T s.grant_type}"
+                              AutomationProperties.Name="{loc:T s.oauth_grant_type}"
+                              ItemsSource="{Binding GrantTypes, ElementName=Root}"
+                              SelectedValue="{Binding OauthGrantType, Mode=TwoWay}" />
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.access_token_url}"
+                             AutomationProperties.Name="{loc:T s.access_token_url}"
+                             Text="{Binding OauthAccessTokenUrl, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.auth_url}"
+                             AutomationProperties.Name="{loc:T s.authorization_url}"
+                             Text="{Binding OauthAuthUrl, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.client_id}"
+                             AutomationProperties.Name="{loc:T s.client_id}"
+                             Text="{Binding OauthClientId, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.client_secret}"
+                             AutomationProperties.Name="{loc:T s.client_secret}"
+                             Text="{Binding OauthClientSecret, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.scope}"
+                             AutomationProperties.Name="{loc:T s.scope}"
+                             Text="{Binding OauthScope, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.audience}"
+                             AutomationProperties.Name="{loc:T s.audience}"
+                             Text="{Binding OauthAudience, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.redirect_uri}"
+                             AutomationProperties.Name="{loc:T s.redirect_uri}"
+                             Text="{Binding OauthRedirectUri, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Style="{StaticResource AuthFieldWide}" materialDesign:HintAssist.Hint="{loc:T s.access_token}"
+                             AutomationProperties.Name="{loc:T s.access_token}"
+                             Text="{Binding OauthAccessToken, UpdateSourceTrigger=PropertyChanged}" />
+                    <StackPanel Style="{StaticResource ChoiceBlock}">
+                        <TextBlock Text="{loc:T s.client_authentication}" Style="{StaticResource ChoiceLabel}" />
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton Content="{loc:T s.send_in_body}" GroupName="oauthclient" Margin="0,0,20,0"
+                                         IsChecked="{Binding OauthClientAuth, Converter={StaticResource Equality}, ConverterParameter=body, Mode=TwoWay}" />
+                            <RadioButton Content="{loc:T s.basic_header}" GroupName="oauthclient" Margin="0,0,20,0"
+                                         IsChecked="{Binding OauthClientAuth, Converter={StaticResource Equality}, ConverterParameter=header, Mode=TwoWay}" />
+                            <CheckBox Content="{loc:T s.pkce}" IsChecked="{Binding OauthUsePkce}" />
+                        </StackPanel>
+                    </StackPanel>
+                </WrapPanel>
+                <TextBlock Style="{StaticResource AuthNote}"
+                           Text="{loc:T s.leave_the_access_token_empty_and_getman_fetc_83812}" />
+            </StackPanel>
+
+            <!-- AWS Signature v4 -->
+            <StackPanel Style="{StaticResource AuthSection}"
+                        Visibility="{Binding Type, Converter={StaticResource EqualityToVis}, ConverterParameter=AwsV4}">
+                <WrapPanel>
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.access_key}"
+                             AutomationProperties.Name="{loc:T s.aws_access_key}"
+                             Text="{Binding AwsAccessKey, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.secret_key}"
+                             AutomationProperties.Name="{loc:T s.aws_secret_key}"
+                             Text="{Binding AwsSecretKey, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.session_token}"
+                             AutomationProperties.Name="{loc:T s.aws_session_token}"
+                             Text="{Binding AwsSessionToken, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.region}"
+                             AutomationProperties.Name="{loc:T s.aws_region}"
+                             Text="{Binding AwsRegion, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.service}"
+                             AutomationProperties.Name="{loc:T s.aws_service}"
+                             Text="{Binding AwsService, UpdateSourceTrigger=PropertyChanged}" />
+                </WrapPanel>
+            </StackPanel>
+
+            <!-- Hawk -->
+            <StackPanel Style="{StaticResource AuthSection}"
+                        Visibility="{Binding Type, Converter={StaticResource EqualityToVis}, ConverterParameter=Hawk}">
+                <WrapPanel>
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.auth_id}"
+                             AutomationProperties.Name="{loc:T s.hawk_auth_id}"
+                             Text="{Binding HawkAuthId, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.auth_key}"
+                             AutomationProperties.Name="{loc:T s.hawk_auth_key}"
+                             Text="{Binding HawkAuthKey, UpdateSourceTrigger=PropertyChanged}" />
+                    <ComboBox Style="{StaticResource AuthCombo}" materialDesign:HintAssist.Hint="{loc:T s.algorithm}"
+                              AutomationProperties.Name="{loc:T s.hawk_algorithm}"
+                              SelectedValue="{Binding HawkAlgorithm, Mode=TwoWay}"
+                              ItemsSource="{Binding HawkAlgorithms, ElementName=Root}" />
+                    <TextBox Style="{StaticResource AuthField}" materialDesign:HintAssist.Hint="{loc:T s.ext_data}"
+                             AutomationProperties.Name="{loc:T s.hawk_ext_data}"
+                             Text="{Binding HawkExt, UpdateSourceTrigger=PropertyChanged}" />
+                </WrapPanel>
+            </StackPanel>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
