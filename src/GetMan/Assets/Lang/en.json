@@ -109,6 +109,7 @@
   "s.expires": "Expires",
   "s.export": "Export",
   "s.export_as_postman_v2_1": "Export as Postman v2.1",
+  "s.export_files_are_snapshots": "These are export files, written between {0} and {1} - the newest is {2} day(s) old. An export holds only what existed when it was made, so anything created or changed in Postman since, and anything never exported, is not here. For everything as it stands now, use the Postman account tab.",
   "s.ext_data": "Ext data",
   "s.failed_tests": "Failed tests",
   "s.fetch": "Fetch",

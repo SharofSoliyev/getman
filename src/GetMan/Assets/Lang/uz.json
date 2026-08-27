@@ -109,6 +109,7 @@
   "s.expires": "Amal qilish muddati",
   "s.export": "Eksport",
   "s.export_as_postman_v2_1": "Postman v2.1 sifatida eksport",
+  "s.export_files_are_snapshots": "Bular eksport fayllari, {0} va {1} oralig'ida yozilgan; eng yangisiga {2} kun bo'lgan. Eksport faqat o'sha paytda mavjud bo'lgan narsani saqlaydi, shuning uchun Postman'da keyin yaratilgan yoki o'zgargan hamma narsa, va umuman eksport qilinmagan narsa bu yerda yo'q. Hozirgi holatdagi hammasini olish uchun Postman akkaunt bo'limidan foydalaning.",
   "s.ext_data": "Ext data",
   "s.failed_tests": "Muvaffaqiyatsiz testlar",
   "s.fetch": "Olish",

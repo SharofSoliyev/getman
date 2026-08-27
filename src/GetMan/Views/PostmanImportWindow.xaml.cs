@@ -101,6 +101,31 @@ public partial class PostmanImportWindow : Window
             ? string.Empty
             : Loc.T("s.files_found_summary", _files.Count, _files.Count(f => f.Kind == "collection"),
                   _files.Count(f => f.Kind == "environment"));
+
+        ShowSnapshotNote();
+    }
+
+    /// <summary>
+    /// Says out loud what the Modified column only implies. An export holds what existed when it
+    /// was written, so importing a folder of old files looks like a complete import and is not one:
+    /// anything created or edited since, and anything never exported at all, is simply absent.
+    /// </summary>
+    private void ShowSnapshotNote()
+    {
+        if (_files.Count == 0)
+        {
+            SnapshotNote.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        var oldest = _files.Min(f => f.Modified);
+        var newest = _files.Max(f => f.Modified);
+        var age = (int)Math.Floor((DateTime.Now - newest).TotalDays);
+
+        SnapshotNoteText.Text = Loc.T("s.export_files_are_snapshots",
+            oldest.ToString("yyyy-MM-dd"), newest.ToString("yyyy-MM-dd"), Math.Max(0, age));
+
+        SnapshotNote.Visibility = Visibility.Visible;
     }
 
     private void OnRescan(object sender, RoutedEventArgs e) => Rescan();
