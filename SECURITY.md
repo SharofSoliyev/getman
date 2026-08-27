@@ -20,10 +20,16 @@ GetMan is a desktop application with no server component. It never uploads your 
 | Cookies received from responses | memory only | discarded when the app closes |
 | Crash reports | `%APPDATA%\GetMan\crash.log` | written locally, never sent |
 
-**Secrets in the workspace file are encrypted**, by default, with Windows DPAPI scoped to your user
-account (Settings → General → Storage turns it off). That covers passwords, bearer tokens, API key
-values, OAuth client secrets and tokens, AWS secret keys and session tokens, Hawk keys, the proxy
-and client-certificate passwords, your Postman API key, and any variable you mark as secret.
+**Secrets in the workspace file are encrypted on Windows**, by default, with DPAPI scoped to your
+user account (Settings → General → Storage turns it off). That covers passwords, bearer tokens, API
+key values, OAuth client secrets and tokens, AWS secret keys and session tokens, Hawk keys, the
+proxy and client-certificate passwords, your Postman API key, and any variable you mark as secret.
+
+**On Linux and macOS the command-line runner writes them in the clear.** DPAPI is a Windows service
+and there is no equivalent the runner can assume — inventing a key of its own and storing it beside
+the data would imply a protection that is not there. If you point `getman` at a workspace on those
+platforms, treat the file as you would any file holding a token. A workspace encrypted on Windows
+and copied to Linux does not decrypt: the values read back as `getman:enc:v1:…`.
 
 What that does and does not buy you:
 

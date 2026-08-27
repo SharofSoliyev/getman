@@ -11,7 +11,7 @@
 
 **English** · [Русский](README.ru.md) · [O'zbekcha](README.uz.md)
 
-**[Download the latest release](https://github.com/SharofSoliyev/getman/releases/latest)** — two
+**[Download the latest release](https://github.com/SharofSoliyev/getman/releases/latest)** —
 self-contained executables, no installer and no runtime to fetch.
 
 <img src="docs/images/main-dark.png" alt="GetMan running a request against postman-echo, showing the response body, tests and timings" width="900">
@@ -37,6 +37,22 @@ dotnet publish src/GetMan.Cli -c Release -r win-x64 --self-contained true \
 Workspace data lives in `%APPDATA%\GetMan\workspace.json` (with a rolling backup), one file per
 Windows user. Nothing is uploaded anywhere, and passwords, tokens and keys are encrypted on disk
 with Windows DPAPI — see [SECURITY.md](SECURITY.md) for what that does and does not protect.
+
+## Platforms
+
+| | Windows | Linux | macOS |
+|---|:---:|:---:|:---:|
+| **GetMan** — the desktop app | ✅ x64 | ✕ | ✕ |
+| **getman** — the [command-line runner](#running-collections-from-the-command-line) | ✅ x64 | ✅ x64, arm64 | ✅ x64, arm64 |
+
+The app is WPF, and WPF is a Windows technology — there is no build of it for Linux or macOS, and
+there will not be one without rewriting the interface on a cross-platform toolkit. That is a real
+piece of work rather than a switch, so the honest answer today is Windows only.
+
+The **command-line runner is cross-platform**, which is where it matters most: it exists to run
+collections in CI, and most CI runs on Linux. It shares the model and service layers with the app
+and nothing else — no WPF — and CI proves that by running the whole service suite and the runner
+itself on Ubuntu on every commit, not just compiling them.
 
 ## Interface languages
 
@@ -222,9 +238,18 @@ the selected request, folder or collection.
 
 ## Running collections from the command line
 
-`getman.exe` is a second, console-only executable that drives the **same** engine as the window —
+`getman` is a second, console-only executable that drives the **same** engine as the window —
 the same importer, variable resolver, auth signing and Jint script runtime. A collection that
 passes in the app passes here, and the other way round. It is the piece you point a CI job at.
+
+It runs on **Linux, macOS and Windows** (x64 and arm64; Windows x64 only). Download the build for
+your platform, make it executable and it needs nothing else installed:
+
+```bash
+curl -sSLo getman https://github.com/SharofSoliyev/getman/releases/latest/download/getman-1.1.0-linux-x64
+chmod +x getman
+./getman --version
+```
 
 ```
 getman run api.postman_collection.json -e staging.postman_environment.json

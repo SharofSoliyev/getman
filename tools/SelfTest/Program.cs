@@ -367,6 +367,21 @@ public static class Program
     /// </summary>
     private static void TestSecretVault()
     {
+        // DPAPI is a Windows service. Off Windows the workspace is written in the clear, and what
+        // matters is that it degrades that way on purpose rather than throwing or losing data.
+        if (!OperatingSystem.IsWindows())
+        {
+            Check("encryption reports itself unavailable off Windows", !SecretVault.Available);
+            Check("protecting is a no-op off Windows", SecretVault.Protect("hunter2") == "hunter2");
+            Check("ciphertext from Windows is handed back rather than blanked",
+                SecretVault.Unprotect("getman:enc:v1:AQAAA") == "getman:enc:v1:AQAAA");
+
+            var portable = PersistenceService.Write(PersistenceService.Seed());
+            Check("a workspace still round trips off Windows",
+                PersistenceService.Read(portable)?.Collections.Count > 0);
+            return;
+        }
+
         if (!SecretVault.Available)
         {
             Check("DPAPI is available on this machine", false, "encryption will be skipped at run time");

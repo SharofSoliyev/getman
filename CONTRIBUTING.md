@@ -35,6 +35,14 @@ compiling — which is the point. Put the WPF-facing part in `Controls/`, the wa
 `Controls/LocExtension.cs` holds the `{loc:T …}` markup extension while the string table itself
 lives in `Services/Localization.cs`.
 
+The app targets `net9.0-windows`; the CLI and the test suite target plain `net9.0` and run on Linux
+and macOS too. CI runs the whole service suite and the CLI on Ubuntu on every commit, so a
+Windows-only API reaching those layers fails the build rather than the download.
+
+A Windows-only call that genuinely belongs there — the registry lookup in `PostmanDiscovery`, DPAPI
+in `SecretVault` — goes behind `OperatingSystem.IsWindows()`, with a documented fallback for the
+other platforms. Do not simply suppress CA1416; the analyser is the thing that noticed.
+
 ## Before you open a pull request
 
 Three checks have to pass. All are fast, and only the online half of the first needs a network.
@@ -47,7 +55,7 @@ dotnet run --project tools/SelfTest                 # the same plus live HTTP
 
 src/GetMan/bin/Release/net9.0-windows/GetMan.exe --self-check
 
-src/GetMan.Cli/bin/Release/net9.0-windows/getman.exe \
+src/GetMan.Cli/bin/Release/net9.0/getman.exe \
   run tools/fixtures/offline-smoke.postman_collection.json -r junit -o cli.xml   # must exit 1
 ```
 
@@ -128,8 +136,11 @@ Before it publishes anything it checks the binaries it is about to upload: the C
 exactly the tagged version, and the app has to pass `--self-check`. So the files people download
 are the files that were tested, not an earlier build of the same commit.
 
-The release gets both executables, named with their version, and a `SHA256SUMS.txt`. Notes are
-generated from the commits since the previous tag.
+The release gets six assets and a `SHA256SUMS.txt`: the Windows app and CLI, and the CLI for
+linux-x64, linux-arm64, osx-x64 and osx-arm64. The cross-platform builds are produced on an Ubuntu
+runner, and the linux-x64 one is executed from an empty directory before publishing — the others are
+built identically and checked for stray files, which is as far as this goes without a matrix of
+hosts. Notes are generated from the commits since the previous tag.
 
 - A tag with a hyphen (`v1.1.0-rc.1`) is published as a **pre-release**, per semver.
 - Re-running the job on a tag that already has a release replaces the assets instead of failing,

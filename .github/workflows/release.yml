@@ -22,8 +22,63 @@ jobs:
   verify:
     uses: ./.github/workflows/ci.yml
 
-  release:
+  # The CLI is the part that is not tied to Windows, and CI runners are where it earns its keep.
+  # Built on Linux so the linux-x64 build can be run before it is published rather than trusted.
+  cli:
     needs: verify
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Work out the version
+        id: version
+        run: |
+          raw='${{ github.event_name }}'
+          if [ "$raw" = "workflow_dispatch" ]; then v='${{ github.event.inputs.version }}'; else v='${{ github.ref_name }}'; fi
+          v="${v#v}"
+          echo "$v" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$' \
+            || { echo "'$v' is not a version this workflow can build"; exit 1; }
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      - name: Publish, check and name the CLI for each platform
+        run: |
+          set -e
+          v='${{ steps.version.outputs.version }}'
+          mkdir -p release
+
+          for rid in linux-x64 linux-arm64 osx-x64 osx-arm64; do
+            dotnet publish src/GetMan.Cli -c Release -r "$rid" --self-contained true \
+              -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true \
+              -p:IncludeNativeLibrariesForSelfExtract=true -p:Version="$v" \
+              -o "out/$rid" --nologo
+
+            stray=$(find "out/$rid" -maxdepth 1 -type f ! -name getman ! -name '*.pdb' | wc -l)
+            [ "$stray" = "0" ] || { echo "out/$rid would leave files behind"; ls -la "out/$rid"; exit 1; }
+
+            cp "out/$rid/getman" "release/getman-$v-$rid"
+            chmod +x "release/getman-$v-$rid"
+          done
+
+          # Only this runner's own platform can actually be run. The rest are built the same way
+          # and checked for stray files, which is as far as honesty goes without a matrix of hosts.
+          mkdir -p sandbox && cp "release/getman-$v-linux-x64" sandbox/getman && chmod +x sandbox/getman
+          reported=$(cd sandbox && ./getman --version)
+          [ "$reported" = "GetMan $v" ] || { echo "linux-x64 reports '$reported', expected 'GetMan $v'"; exit 1; }
+          echo "linux-x64 runs standalone and reports $reported"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cli-assets
+          path: release/*
+          if-no-files-found: error
+
+  release:
+    needs: [verify, cli]
     runs-on: windows-latest
 
     steps:
@@ -134,11 +189,25 @@ jobs:
           Write-Host "published binaries run from an empty folder"
           exit 0
 
+      - name: Collect the Linux and macOS builds
+        uses: actions/download-artifact@v4
+        with:
+          name: cli-assets
+          path: release
+
       - name: Checksums
         run: |
-          Get-ChildItem release/*.exe | ForEach-Object {
+          # Enumerated into a variable first: piping straight into Set-Content would create
+          # SHA256SUMS.txt while the enumeration is still running and hash it into itself.
+          $files = @(Get-ChildItem release -File)
+          if ($files.Count -ne 6) {
+            throw "expected 6 assets (2 Windows, 4 CLI), found $($files.Count): $($files.Name -join ', ')"
+          }
+
+          $lines = $files | ForEach-Object {
             '{0}  {1}' -f (Get-FileHash $_ -Algorithm SHA256).Hash.ToLower(), $_.Name
-          } | Set-Content release/SHA256SUMS.txt -Encoding ascii
+          }
+          Set-Content release/SHA256SUMS.txt -Value $lines -Encoding ascii
           Get-Content release/SHA256SUMS.txt
 
       - name: Create or update the release

@@ -11,8 +11,7 @@
 
 [English](README.md) · [Русский](README.ru.md) · **O'zbekcha**
 
-**[Oxirgi relizni yuklab olish](https://github.com/SharofSoliyev/getman/releases/latest)** — ikkita
-mustaqil ishlaydigan fayl, o'rnatuvchi ham, alohida runtime ham kerak emas.
+**[Oxirgi relizni yuklab olish](https://github.com/SharofSoliyev/getman/releases/latest)** — mustaqil ishlaydigan fayllar, o'rnatuvchi ham, alohida runtime ham kerak emas.
 
 <img src="docs/images/main-uz.png" alt="GetMan postman-echo'ga so'rov yubormoqda: javob tanasi, testlar va vaqtlar" width="900">
 
@@ -38,6 +37,22 @@ Ish maydoni `%APPDATA%\GetMan\workspace.json` faylida saqlanadi (zaxira nusxasi 
 Windows foydalanuvchisi uchun alohida. Hech narsa hech qayerga yuborilmaydi, parol, token va
 kalitlar esa Windows DPAPI bilan diskda shifrlanadi — bu nimani himoya qiladi va nimani yo'q,
 [SECURITY.md](SECURITY.md) da yozilgan.
+
+## Platformalar
+
+| | Windows | Linux | macOS |
+|---|:---:|:---:|:---:|
+| **GetMan** — ish stoli ilovasi | ✅ x64 | ✕ | ✕ |
+| **getman** — [konsol runneri](#kolleksiyalarni-buyruq-satridan-ishga-tushirish) | ✅ x64 | ✅ x64, arm64 | ✅ x64, arm64 |
+
+Ilova WPF'da yozilgan, WPF esa Windows texnologiyasi — Linux va macOS uchun uning buildi yo'q va
+interfeysni kross-platforma toolkitida qaytadan yozmasdan bo'lmaydi ham. Bu tugmani bosish emas,
+alohida ish, shuning uchun bugungi rost javob — faqat Windows.
+
+**Konsol runneri esa kross-platforma**, va bu aynan eng kerakli joyda: u kolleksiyalarni CI'da ishga
+tushirish uchun bor, CI esa asosan Linuxda ishlaydi. U ilova bilan faqat model va servis qatlamlarini
+baham ko'radi — WPF yo'q — va CI buni har commitda Ubuntu'da butun servis testlarini hamda runnerning
+o'zini **ishga tushirib** isbotlaydi, shunchaki kompilyatsiya qilib emas.
 
 ## Interfeys tillari
 

@@ -43,7 +43,7 @@ jobs:
       # exit code without needing anything to answer.
       - name: CLI smoke test
         run: |
-          $cli = "src/GetMan.Cli/bin/Release/net9.0-windows/getman.exe"
+          $cli = "src/GetMan.Cli/bin/Release/net9.0/getman.exe"
 
           & $cli --version
           $version = $LASTEXITCODE
@@ -93,4 +93,69 @@ jobs:
           path: |
             dist/GetMan.exe
             dist-cli/getman.exe
+          if-no-files-found: error
+
+  # The desktop app is WPF and stops at Windows, but the CLI shares only Models and Services,
+  # which have no WPF in them. That is a claim worth running rather than asserting, so the whole
+  # service suite and the CLI itself are exercised on Linux, where most CI actually happens.
+  linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Build the cross-platform projects
+        run: |
+          dotnet build src/GetMan.Cli -c Release --nologo
+          dotnet build tools/SelfTest -c Release --nologo
+
+      - name: Service tests
+        run: dotnet run --project tools/SelfTest -c Release --no-build -- --offline
+
+      - name: CLI smoke test
+        run: |
+          set -e
+          cli=src/GetMan.Cli/bin/Release/net9.0/getman
+          "$cli" --version
+
+          # A refused connection is the expected outcome, so a zero here means the run did not
+          # happen. `set -e` would kill the script on the 1, hence the explicit capture.
+          code=0
+          "$cli" run tools/fixtures/offline-smoke.postman_collection.json \
+                 -r junit -o cli-report.xml --no-color || code=$?
+          [ "$code" = "1" ] || { echo "expected exit 1, got $code"; exit 1; }
+          grep -q 'failures="1"' cli-report.xml || { echo "the JUnit report did not record the failure"; exit 1; }
+
+          # The importer has to work here too, not just on Windows.
+          "$cli" run tools/fixtures/billing.swagger.yaml --no-color | grep -q 'List invoices' \
+            || { echo "the YAML Swagger import produced no requests"; exit 1; }
+          echo "CLI smoke test ok"
+
+      - name: Publish for Linux and check it runs standalone
+        run: |
+          set -e
+          for rid in linux-x64 linux-arm64; do
+            dotnet publish src/GetMan.Cli -c Release -r "$rid" --self-contained true \
+              -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true \
+              -p:IncludeNativeLibrariesForSelfExtract=true -o "out/$rid" --nologo
+            stray=$(find "out/$rid" -maxdepth 1 -type f ! -name getman ! -name '*.pdb' | wc -l)
+            [ "$stray" = "0" ] || { echo "out/$rid has files a download would leave behind"; \
+                                    ls -la "out/$rid"; exit 1; }
+          done
+
+          # linux-x64 is this runner's own architecture, so it can be run from an empty directory
+          # the way a download would be. arm64 is built but cannot be executed here.
+          mkdir -p sandbox && cp out/linux-x64/getman sandbox/getman && chmod +x sandbox/getman
+          cd sandbox && ./getman --version
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: getman-linux
+          path: |
+            out/linux-x64/getman
+            out/linux-arm64/getman
           if-no-files-found: error

@@ -46,23 +46,28 @@ public static class PostmanDiscovery
             DataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Postman")
         };
 
-        foreach (var root in new[] { Registry.LocalMachine, Registry.CurrentUser })
+        // The uninstall registry is the only place that reports a version. There is no registry
+        // off Windows, and the CLI runs there, so the lookup is skipped rather than attempted.
+        if (OperatingSystem.IsWindows())
         {
-            try
+            foreach (var root in new[] { Registry.LocalMachine, Registry.CurrentUser })
             {
-                using var key = root.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
-                if (key == null) continue;
-                foreach (var sub in key.GetSubKeyNames())
+                try
                 {
-                    using var app = key.OpenSubKey(sub);
-                    var name = app?.GetValue("DisplayName") as string;
-                    if (name == null || name.IndexOf("Postman", StringComparison.OrdinalIgnoreCase) < 0) continue;
-                    info.Installed = true;
-                    info.Version = app.GetValue("DisplayVersion") as string ?? string.Empty;
-                    info.InstallPath = app.GetValue("InstallLocation") as string ?? string.Empty;
+                    using var key = root.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
+                    if (key == null) continue;
+                    foreach (var sub in key.GetSubKeyNames())
+                    {
+                        using var app = key.OpenSubKey(sub);
+                        var name = app?.GetValue("DisplayName") as string;
+                        if (name == null || name.IndexOf("Postman", StringComparison.OrdinalIgnoreCase) < 0) continue;
+                        info.Installed = true;
+                        info.Version = app.GetValue("DisplayVersion") as string ?? string.Empty;
+                        info.InstallPath = app.GetValue("InstallLocation") as string ?? string.Empty;
+                    }
                 }
+                catch { }
             }
-            catch { }
         }
 
         if (!info.Installed)

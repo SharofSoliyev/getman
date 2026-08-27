@@ -46,6 +46,12 @@ public static class SecretVault
         get
         {
             if (_available.HasValue) return _available.Value;
+
+            // DPAPI is a Windows service with no equivalent the CLI can assume elsewhere. Rather
+            // than invent a key of our own and imply a protection that is not there, the workspace
+            // stays readable off Windows and SECURITY.md says so.
+            if (!OperatingSystem.IsWindows()) return (_available = false).Value;
+
             try
             {
                 var probe = Encoding.UTF8.GetBytes("probe");
@@ -65,7 +71,10 @@ public static class SecretVault
 
     public static string Protect(string plain)
     {
-        if (string.IsNullOrEmpty(plain) || IsProtected(plain) || !Available) return plain;
+        // The IsWindows() test is redundant after Available, but the platform analyser cannot see
+        // through a property and would flag the call below without it.
+        if (string.IsNullOrEmpty(plain) || IsProtected(plain) || !Available || !OperatingSystem.IsWindows())
+            return plain;
         try
         {
             var sealed_ = ProtectedData.Protect(Encoding.UTF8.GetBytes(plain), Entropy,
@@ -88,6 +97,11 @@ public static class SecretVault
     public static string Unprotect(string value)
     {
         if (!IsProtected(value)) return value;
+
+        // A workspace encrypted on Windows cannot be read anywhere else. The ciphertext is handed
+        // back rather than blanked, for the same reason as below.
+        if (!OperatingSystem.IsWindows()) return value;
+
         try
         {
             var sealed_ = System.Convert.FromBase64String(value[Prefix.Length..]);
