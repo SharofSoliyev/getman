@@ -161,7 +161,10 @@ public static class Program
     /// <summary>Cyrillic, CJK and emoji must survive import, save, reload and export.</summary>
     private static void TestUnicodeRoundTrip()
     {
-        const string cyrillic = "AFIN Bank SDK v1 (для банков и PLUM)";
+        // Shaped like a real collection name - Cyrillic beside Latin, a yo, a version and
+        // brackets - without being one. This started life as a name from an actual workspace,
+        // which is a client's business on a public repository for no benefit to the test.
+        const string cyrillic = "Платёжный шлюз v2 (Payment Gateway)";
         const string mixed = "Заголовок 名前 emoji ✓ — dash";
 
         var json = CollectionJson
