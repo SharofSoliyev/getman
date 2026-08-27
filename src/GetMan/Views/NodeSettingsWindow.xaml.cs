@@ -52,7 +52,7 @@ public partial class NodeSettingsWindow : Window
         var dlg = new Microsoft.Win32.SaveFileDialog
         {
             FileName = root.Name.Replace(' ', '_') + ".postman_collection.json",
-            Filter = "Postman collection (*.json)|*.json"
+            Filter = FileFilters.PostmanCollection
         };
         if (dlg.ShowDialog() == true)
             PersistenceService.ExportToFile(dlg.FileName, PostmanExporter.ExportCollection(root));

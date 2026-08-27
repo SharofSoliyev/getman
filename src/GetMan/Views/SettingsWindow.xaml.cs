@@ -18,7 +18,7 @@ public partial class SettingsWindow : Window
     {
         var dlg = new Microsoft.Win32.OpenFileDialog
         {
-            Filter = "Certificates (*.pfx;*.p12)|*.pfx;*.p12|All files (*.*)|*.*"
+            Filter = FileFilters.Certificates
         };
         if (dlg.ShowDialog() == true && DataContext is AppSettings s)
             s.ClientCertPath = dlg.FileName;

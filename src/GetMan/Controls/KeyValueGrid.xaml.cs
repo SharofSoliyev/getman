@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using GetMan.Models;
+using GetMan.Services;
 
 namespace GetMan.Controls;
 
@@ -81,7 +82,7 @@ public partial class KeyValueGrid : UserControl
     private void OnPickFile(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement fe || fe.Tag is not KeyValueItem item) return;
-        var dlg = new Microsoft.Win32.OpenFileDialog { Title = "Select a file to upload" };
+        var dlg = new Microsoft.Win32.OpenFileDialog { Title = Loc.T("s.dlg_select_upload") };
         if (dlg.ShowDialog() == true)
         {
             item.FilePath = dlg.FileName;

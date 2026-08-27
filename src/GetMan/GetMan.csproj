@@ -41,6 +41,7 @@
     <PackageReference Include="Jint" Version="4.4.0" />
     <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
     <PackageReference Include="MaterialDesignThemes" Version="5.3.2" />
     <PackageReference Include="System.Text.Json" Version="9.0.2" />
   </ItemGroup>

@@ -84,7 +84,7 @@ public partial class RunnerWindow : Window
     {
         var dlg = new Microsoft.Win32.OpenFileDialog
         {
-            Filter = "Data files (*.csv;*.json)|*.csv;*.json|All files (*.*)|*.*"
+            Filter = FileFilters.Data
         };
         if (dlg.ShowDialog() != true) return;
 

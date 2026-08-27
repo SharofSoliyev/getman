@@ -1,5 +1,6 @@
 using System.IO;
 using System.Windows;
+using GetMan.Services;
 using GetMan.ViewModels;
 
 namespace GetMan.Views;
@@ -21,7 +22,7 @@ public partial class ImportWindow : Window
 
     private void OnPickFile(object sender, RoutedEventArgs e)
     {
-        var dlg = new Microsoft.Win32.OpenFileDialog { Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*" };
+        var dlg = new Microsoft.Win32.OpenFileDialog { Filter = FileFilters.Import };
         if (dlg.ShowDialog() == true)
             Editor.BoundText = File.ReadAllText(dlg.FileName);
     }

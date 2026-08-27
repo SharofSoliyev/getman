@@ -87,7 +87,7 @@ public partial class EnvironmentWindow : Window
         var dlg = new Microsoft.Win32.SaveFileDialog
         {
             FileName = _current.Name.Replace(' ', '_') + ".postman_environment.json",
-            Filter = "Postman environment (*.json)|*.json"
+            Filter = FileFilters.PostmanEnvironment
         };
         if (dlg.ShowDialog() == true)
             PersistenceService.ExportToFile(dlg.FileName, PostmanExporter.ExportEnvironment(_current));

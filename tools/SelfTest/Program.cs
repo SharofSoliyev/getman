@@ -62,6 +62,12 @@ public static class Program
         Section("Data files (runner and CLI)");
         TestDataFiles();
 
+        Section("OpenAPI 3 import");
+        TestOpenApiImport();
+
+        Section("Swagger 2.0 import (YAML)");
+        TestSwaggerImport();
+
         Section("Request preparation");
         TestPreparation();
 
@@ -267,6 +273,145 @@ public static class Program
         {
             try { Directory.Delete(dir, true); } catch { }
         }
+    }
+
+    /// <summary>Fixtures are found by walking up from the binary, so the suite runs from anywhere.</summary>
+    private static string Fixture(string name)
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory != null)
+        {
+            var candidate = Path.Combine(directory.FullName, "tools", "fixtures", name);
+            if (File.Exists(candidate)) return candidate;
+            directory = directory.Parent;
+        }
+        return Path.Combine("tools", "fixtures", name);
+    }
+
+    private static CollectionNode FindRequest(CollectionNode collection, string name) =>
+        collection?.Flatten().FirstOrDefault(n =>
+            n.Kind == NodeKind.Request && string.Equals(n.Name, name, StringComparison.OrdinalIgnoreCase));
+
+    private static string VariableValue(CollectionNode collection, string key) =>
+        collection?.Variables.FirstOrDefault(v => v.Key == key)?.Value;
+
+    private static void TestOpenApiImport()
+    {
+        var result = PostmanImporter.ImportFile(Fixture("petstore.openapi.json"));
+        Check("openapi 3 import succeeds", string.IsNullOrEmpty(result.Error), result.Error);
+
+        var collection = result.Collections.FirstOrDefault();
+        if (collection == null) { Check("openapi 3 produced a collection", false); return; }
+
+        Check("collection takes its name from info.title", collection.Name == "Pet store", collection.Name);
+        Check("server url becomes baseUrl with its template turned into a variable",
+            VariableValue(collection, "baseUrl") == "https://{{region}}.api.petstore.test/v1",
+            VariableValue(collection, "baseUrl"));
+        Check("server variable keeps its default", VariableValue(collection, "region") == "eu",
+            VariableValue(collection, "region"));
+        Check("a second server is reported rather than silently dropped",
+            result.Warnings.Any(w => w.Contains("2 servers")), string.Join("; ", result.Warnings));
+
+        Check("collection auth comes from the top-level security requirement",
+            collection.Auth.Type == AuthType.Bearer && collection.Auth.Token == "{{bearerToken}}",
+            $"{collection.Auth.Type} / {collection.Auth.Token}");
+        Check("the bearer token is left as an empty variable to fill in",
+            VariableValue(collection, "bearerToken") == string.Empty);
+
+        var folders = collection.Children.Where(c => c.Kind == NodeKind.Folder).Select(c => c.Name).ToList();
+        Check("operations are grouped by tag", folders.Contains("pets") && folders.Contains("owners"),
+            string.Join(", ", folders));
+        Check("an untagged operation falls back to its first path segment", folders.Contains("health"),
+            string.Join(", ", folders));
+        Check("the tag description reaches the folder",
+            collection.Children.FirstOrDefault(c => c.Name == "pets")?.Description == "Everything about pets");
+
+        var list = FindRequest(collection, "List pets");
+        if (list == null) { Check("summary becomes the request name", false, "'List pets' not found"); return; }
+
+        Check("required query parameters land in the url",
+            list.Request.Url == "{{baseUrl}}/pets?limit=20", list.Request.Url);
+        Check("an optional query parameter is a disabled row rather than a url entry",
+            list.Request.QueryParams.Any(p => p.Key == "status" && !p.Enabled) &&
+            list.Request.QueryParams.Any(p => p.Key == "limit" && p.Enabled),
+            string.Join(", ", list.Request.QueryParams.Select(p => $"{p.Key}={p.Enabled}")));
+        Check("a query parameter keeps its description",
+            list.Request.QueryParams.FirstOrDefault(p => p.Key == "limit")?.Description == "How many to return");
+        Check("a header parameter becomes a header row, seeded from its format",
+            list.Request.Headers.FirstOrDefault(p => p.Key == "X-Request-Id")?.Value == "{{$guid}}",
+            list.Request.Headers.FirstOrDefault(p => p.Key == "X-Request-Id")?.Value);
+
+        var delete = FindRequest(collection, "Delete a pet");
+        Check("path templates become :variables",
+            delete?.Request.Url == "{{baseUrl}}/pets/:petId", delete?.Request.Url);
+        Check("a path parameter declared on the path applies to the operation under it",
+            delete?.Request.PathVariables.Any(p => p.Key == "petId" && p.Description == "The pet id") == true);
+        Check("an operation-level security requirement overrides the collection default",
+            delete?.Request.Auth.Type == AuthType.ApiKey &&
+            delete.Request.Auth.ApiKeyName == "X-API-Key" &&
+            delete.Request.Auth.ApiKeyLocation == "header",
+            $"{delete?.Request.Auth.Type} / {delete?.Request.Auth.ApiKeyName}");
+
+        var create = FindRequest(collection, "Create a pet");
+        var body = create?.Request.Body.Raw ?? string.Empty;
+        Check("a json request body is generated from the schema",
+            create?.Request.Body.Mode == BodyMode.Raw && body.Contains("\"name\""), body);
+        Check("the schema's own example wins over a placeholder", body.Contains("\"Rex\"") && body.Contains("42"), body);
+        Check("a date format becomes a plausible date", body.Contains("2026-01-31"), body);
+        Check("a $ref is followed", body.Contains("\"email\"") && body.Contains("user@example.com"), body);
+        Check("an array becomes a one-element array", body.Contains("\"tags\": ["), body);
+        Check("a self-referencing schema terminates", body.Contains("\"friend\": null"), body);
+        Check("a json body sets its content type",
+            create?.Request.Headers.Any(h => h.Key == "Content-Type" && h.Value == "application/json") == true);
+
+        var upload = FindRequest(collection, "Upload an avatar");
+        Check("multipart becomes form-data", upload?.Request.Body.Mode == BodyMode.FormData);
+        Check("a binary property becomes a file row",
+            upload?.Request.Body.FormData.FirstOrDefault(f => f.Key == "file")?.Kind == ParamKind.File);
+        Check("an optional form field is disabled",
+            upload?.Request.Body.FormData.FirstOrDefault(f => f.Key == "caption")?.Enabled == false);
+
+        Check("the server also becomes an environment",
+            result.Environments.Any(e => e.Variables.Any(v => v.Key == "baseUrl")));
+    }
+
+    private static void TestSwaggerImport()
+    {
+        var result = PostmanImporter.ImportFile(Fixture("billing.swagger.yaml"));
+        Check("yaml swagger 2.0 import succeeds", string.IsNullOrEmpty(result.Error), result.Error);
+
+        var collection = result.Collections.FirstOrDefault();
+        if (collection == null) { Check("swagger produced a collection", false); return; }
+
+        Check("collection name", collection.Name == "Billing", collection.Name);
+        Check("scheme, host and basePath compose baseUrl",
+            VariableValue(collection, "baseUrl") == "https://api.billing.test/v2",
+            VariableValue(collection, "baseUrl"));
+        Check("securityDefinitions map onto auth",
+            collection.Auth.Type == AuthType.ApiKey && collection.Auth.ApiKeyName == "X-Billing-Key",
+            $"{collection.Auth.Type} / {collection.Auth.ApiKeyName}");
+
+        var list = FindRequest(collection, "List invoices");
+        Check("a swagger query parameter is typed from the parameter itself, not a schema",
+            list?.Request.Url == "{{baseUrl}}/invoices?page=1", list?.Request.Url);
+        Check("an optional swagger query parameter is a disabled row",
+            list?.Request.QueryParams.Any(p => p.Key == "customer" && !p.Enabled) == true);
+
+        var raise = FindRequest(collection, "Raise an invoice");
+        var body = raise?.Request.Body.Raw ?? string.Empty;
+        Check("an 'in: body' parameter becomes the json body",
+            raise?.Request.Body.Mode == BodyMode.Raw && body.Contains("\"amount\""), body);
+        Check("yaml numbers survive the conversion", body.Contains("149.5"), body);
+        Check("a default value is used when there is no example", body.Contains("\"UZS\""), body);
+        Check("a nested array of objects is generated", body.Contains("\"sku\""), body);
+
+        var pay = FindRequest(collection, "Pay an invoice");
+        Check("swagger path parameters become :variables",
+            pay?.Request.Url == "{{baseUrl}}/invoices/:id/pay", pay?.Request.Url);
+        Check("'in: formData' becomes a urlencoded body",
+            pay?.Request.Body.Mode == BodyMode.UrlEncoded &&
+            pay.Request.Body.UrlEncoded.Any(f => f.Key == "method" && f.Value == "card"),
+            string.Join(", ", pay?.Request.Body.UrlEncoded.Select(f => $"{f.Key}={f.Value}") ?? Array.Empty<string>()));
     }
 
     private static void Section(string name)

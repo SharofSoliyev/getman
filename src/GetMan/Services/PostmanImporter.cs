@@ -38,20 +38,47 @@ public static class PostmanImporter
     public static ImportResult ImportText(string text, string fallbackName = "Imported")
     {
         var result = new ImportResult();
+        var options = new JsonDocumentOptions
+        {
+            AllowTrailingCommas = true,
+            CommentHandling = JsonCommentHandling.Skip,
+            MaxDepth = 512
+        };
+
         JsonDocument doc;
         try
         {
-            doc = JsonDocument.Parse(text, new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip, MaxDepth = 512 });
+            doc = JsonDocument.Parse(text, options);
         }
         catch (Exception ex)
         {
-            result.Error = "Not valid JSON: " + ex.Message;
-            return result;
+            // Most OpenAPI descriptions are YAML. Converting and retrying costs one parse on a
+            // file that was never going to load anyway.
+            var converted = YamlToJson.Convert(text);
+            if (converted == null)
+            {
+                result.Error = "Not valid JSON: " + ex.Message;
+                return result;
+            }
+
+            try
+            {
+                doc = JsonDocument.Parse(converted, options);
+            }
+            catch (Exception yamlEx)
+            {
+                result.Error = "Not valid JSON or YAML: " + yamlEx.Message;
+                return result;
+            }
         }
 
         using (doc)
         {
             var root = doc.RootElement;
+
+            // OpenAPI and Swagger are not Postman formats, but they are what people have, and the
+            // check here means every entry point - the app, the paste box and the CLI - accepts them.
+            if (OpenApiImporter.Looks(root)) return OpenApiImporter.Import(root, fallbackName);
 
             if (root.ValueKind == JsonValueKind.Array)
             {

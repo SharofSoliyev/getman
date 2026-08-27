@@ -83,18 +83,52 @@ structured clone), it is undocumented, it changes between versions, and the file
 Postman runs. Scavenging it produced no recoverable collections in testing, so the two routes above
 are what GetMan offers.
 
-## Postman compatibility
+## What GetMan can import
 
-**Import** — `Import` button, `Ctrl+O`, or `Paste / cURL` for raw text:
+**Import** — `Import` button, `Ctrl+O`, or `Paste / cURL` for raw text. The format is detected from
+the content, so the same button takes all of these:
 
 | Format | Supported |
 |---|---|
-| Collection v2.1 | yes |
-| Collection v2.0 | yes |
-| Collection v1 (`requests` + `folders`) | yes |
-| Environment / Globals export | yes |
+| Postman collection v2.1 | yes |
+| Postman collection v2.0 | yes |
+| Postman collection v1 (`requests` + `folders`) | yes |
+| Postman environment / globals export | yes |
 | Postman "Export data" dump (`collections` + `environments` + `globals`) | yes |
+| **OpenAPI 3.0 / 3.1**, JSON or YAML | yes |
+| **Swagger 2.0**, JSON or YAML | yes |
 | cURL command (bash or cmd quoting) | yes |
+
+### OpenAPI and Swagger
+
+Point GetMan at a `swagger.json` or an `openapi.yaml` and you get a working collection, not a list
+of URLs:
+
+- **One folder per tag.** An operation with no tag goes under its first path segment.
+- **`servers` becomes `{{baseUrl}}`**, as a collection variable *and* an environment, so switching
+  between staging and production is a dropdown. A templated server such as
+  `https://{region}.api.example.com` turns `region` into its own variable, seeded with the declared
+  default.
+- **Parameters become rows.** Required query parameters go into the URL; optional ones are disabled
+  rows you tick when you need them. `path` parameters become `:name` segments, `header` parameters
+  become headers, and every one keeps its description.
+- **Request bodies are generated from the schema** — `$ref` followed, `allOf` merged, `oneOf`/`anyOf`
+  taking the first branch, `example` and `default` and `enum` preferred over placeholders, and
+  formats turned into plausible values (`date` → `2026-01-31`, `uuid` → `{{$guid}}`,
+  `email` → `user@example.com`). A schema that refers to itself terminates instead of looping.
+  `multipart/form-data` becomes form-data with `format: binary` fields as file rows;
+  `application/x-www-form-urlencoded` becomes a urlencoded body.
+- **Security schemes become auth.** `http bearer`, `http basic`, `apiKey` (header or query) and
+  `oauth2` map onto GetMan's auth, with the credentials left as empty collection variables to fill
+  in — a description never contains a secret, and GetMan does not invent one. A requirement declared
+  on one operation overrides the collection default.
+
+Anything GetMan could not carry across is reported after the import rather than dropped silently:
+a second server, a body media type it does not build, a security scheme with no equivalent.
+
+**Not imported:** WSDL, HAR, Insomnia. Those are separate formats.
+
+### Postman collections
 
 Everything inside the collection comes across: nested folders, query params (including disabled
 rows), headers as arrays *or* as a newline string, all body modes (`raw` with its language,
@@ -104,10 +138,8 @@ variables, path variables, description objects, and `protocolProfileBehavior`
 (`followRedirects`, `strictSSL`, `maxRedirects`, `disableUrlEncoding`, `disableCookies`).
 
 **Export** — right-click a collection → *Export as Postman v2.1*, or export any environment.
-Exports re-import cleanly into Postman and into GetMan.
-
-**Not imported:** OpenAPI/Swagger, WSDL, HAR, Insomnia. Those are separate formats, not Postman
-collections.
+Exports re-import cleanly into Postman and into GetMan, including a collection that started life as
+an OpenAPI description.
 
 ---
 
@@ -290,8 +322,8 @@ styles — change those to re-skin the app.
 ```
 src/GetMan/
   Models/        request, collection, environment and response models
-  Services/      HTTP engine, variable resolver, script runtime, Postman import/export,
-                 cURL import, code generation, persistence
+  Services/      HTTP engine, variable resolver, script runtime, Postman and OpenAPI import,
+                 Postman export, cURL import, code generation, persistence
   ViewModels/    MainViewModel, RequestTabViewModel
   Views/         request/response editors and the dialog windows
   Controls/      AvalonEdit host, key-value grid, converters
@@ -353,7 +385,8 @@ GetMan stands on other people's work:
 [MaterialDesignInXamlToolkit](https://github.com/MaterialDesignInXAML/MaterialDesignInXamlToolkit)
 (MIT), [AvalonEdit](https://github.com/icsharpcode/AvalonEdit) (MIT),
 [Jint](https://github.com/sebastienros/jint) (BSD-2-Clause),
-[CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) (MIT) and
+[CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) (MIT),
+[YamlDotNet](https://github.com/aaubry/YamlDotNet) (MIT) and
 [Fira Sans / Fira Mono](https://github.com/mozilla/Fira) (SIL Open Font License 1.1).
 
 GetMan is not affiliated with Postman, Inc. "Postman" is used only to describe the file formats and

@@ -83,18 +83,51 @@ hujjatlashtirilmagan, versiyadan versiyaga o'zgaradi va Postman ishlab turganda 
 bo'ladi. Sinov chog'ida undan birorta ham tiklab bo'ladigan kolleksiya chiqmadi, shuning uchun
 GetMan yuqoridagi ikki yo'lni taklif qiladi.
 
-## Postman bilan moslik
+## GetMan nimalarni import qila oladi
 
-**Import** — `Import` tugmasi, `Ctrl+O` yoki xom matn uchun `Matn / cURL`:
+**Import** — `Import` tugmasi, `Ctrl+O` yoki xom matn uchun `Matn / cURL`. Format mazmunidan
+aniqlanadi, shuning uchun bitta tugma bularning hammasini qabul qiladi:
 
 | Format | Qo'llab-quvvatlanadi |
 |---|---|
-| Collection v2.1 | ha |
-| Collection v2.0 | ha |
-| Collection v1 (`requests` + `folders`) | ha |
-| Muhit / Global o'zgaruvchilar eksporti | ha |
+| Postman kolleksiyasi v2.1 | ha |
+| Postman kolleksiyasi v2.0 | ha |
+| Postman kolleksiyasi v1 (`requests` + `folders`) | ha |
+| Postman muhiti / global o'zgaruvchilar eksporti | ha |
 | Postman "Export data" dumpi (`collections` + `environments` + `globals`) | ha |
+| **OpenAPI 3.0 / 3.1**, JSON yoki YAML | ha |
+| **Swagger 2.0**, JSON yoki YAML | ha |
 | cURL buyrug'i (bash yoki cmd qo'shtirnoqlari) | ha |
+
+### OpenAPI va Swagger
+
+GetMan'ga `swagger.json` yoki `openapi.yaml` ni bering — URL ro'yxatini emas, ishlaydigan kolleksiya
+olasiz:
+
+- **Har bir tegga bitta papka.** Tegsiz operatsiya o'z yo'lining birinchi bo'lagi ostiga tushadi.
+- **`servers` → `{{baseUrl}}`**, ham kolleksiya o'zgaruvchisi, ham muhit sifatida — shunda staging va
+  production o'rtasida almashish ochiladigan ro'yxatga aylanadi. `https://{region}.api.example.com`
+  kabi shablonli server `region` ni alohida o'zgaruvchi qiladi va tavsifdagi standart qiymatni beradi.
+- **Parametrlar jadval qatorlariga aylanadi.** Majburiy query parametrlari URL'ga tushadi,
+  ixtiyoriylari esa kerak bo'lganda belgilaydigan o'chirilgan qatorlarga. `path` parametrlari
+  `:name` bo'lagiga, `header` parametrlari sarlavhalarga aylanadi va hammasi tavsifini saqlaydi.
+- **So'rov tanasi sxemadan yaratiladi** — `$ref` ochiladi, `allOf` birlashtiriladi, `oneOf`/`anyOf`
+  birinchi tarmoqni oladi, `example`, `default` va `enum` o'rin tutuvchilardan ustun turadi,
+  formatlar esa ishonarli qiymatlarga aylanadi (`date` → `2026-01-31`, `uuid` → `{{$guid}}`,
+  `email` → `user@example.com`). O'ziga havola qiladigan sxema aylanmaydi, tugaydi.
+  `multipart/form-data` form-data bo'ladi va `format: binary` maydonlari fayl qatoriga aylanadi;
+  `application/x-www-form-urlencoded` esa urlencoded tanaga.
+- **Xavfsizlik sxemalari auth'ga aylanadi.** `http bearer`, `http basic`, `apiKey` (sarlavhada yoki
+  query'da) va `oauth2` GetMan auth'iga tushadi, hisob ma'lumotlari esa to'ldirish uchun bo'sh
+  kolleksiya o'zgaruvchisi bo'lib qoladi — tavsifda hech qachon maxfiy ma'lumot bo'lmaydi va GetMan
+  uni o'ylab topmaydi. Bitta operatsiyada e'lon qilingan talab kolleksiya standartidan ustun turadi.
+
+GetMan ko'chira olmagan narsa jimgina tashlab ketilmaydi, importdan keyin xabar qilinadi: ikkinchi
+server, u qura olmaydigan tana turi, ekvivalenti yo'q xavfsizlik sxemasi.
+
+**Import qilinmaydi:** WSDL, HAR, Insomnia. Bular alohida formatlar.
+
+### Postman kolleksiyalari
 
 Kolleksiya ichidagi hamma narsa ko'chib o'tadi: ichma-ich papkalar, query parametrlari (o'chirilgan
 qatorlar ham), massiv *yoki* qatorlar bilan ajratilgan matn ko'rinishidagi sarlavhalar, tananing
@@ -106,10 +139,7 @@ obyektlari va `protocolProfileBehavior` (`followRedirects`, `strictSSL`, `maxRed
 
 **Eksport** — kolleksiyani o'ng tugma bilan bosing → *Postman v2.1 sifatida eksport*, yoki istalgan
 muhitni eksport qiling. Eksport qilingan fayllar Postman'ga ham, GetMan'ga ham toza qaytib import
-bo'ladi.
-
-**Import qilinmaydi:** OpenAPI/Swagger, WSDL, HAR, Insomnia. Bular alohida formatlar, Postman
-kolleksiyasi emas.
+bo'ladi — OpenAPI tavsifidan boshlangan kolleksiya ham.
 
 ---
 
@@ -354,7 +384,8 @@ GetMan boshqalarning mehnati ustida turibdi:
 [MaterialDesignInXamlToolkit](https://github.com/MaterialDesignInXAML/MaterialDesignInXamlToolkit)
 (MIT), [AvalonEdit](https://github.com/icsharpcode/AvalonEdit) (MIT),
 [Jint](https://github.com/sebastienros/jint) (BSD-2-Clause),
-[CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) (MIT) va
+[CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) (MIT),
+[YamlDotNet](https://github.com/aaubry/YamlDotNet) (MIT) va
 [Fira Sans / Fira Mono](https://github.com/mozilla/Fira) (SIL Open Font License 1.1).
 
 GetMan Postman, Inc. bilan bog'liq emas. "Postman" nomi faqat GetMan o'qiydigan fayl formatlari va

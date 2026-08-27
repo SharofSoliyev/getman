@@ -71,7 +71,7 @@ public partial class RequestTabViewModel : ObservableObject
         get
         {
             if (Response == null) return string.Empty;
-            if (Response.HasError) return "Error";
+            if (Response.HasError) return Loc.T("s.error");
             return $"{Response.StatusCode} {Response.StatusText}";
         }
     }
@@ -247,7 +247,7 @@ public partial class RequestTabViewModel : ObservableObject
         var dlg = new Microsoft.Win32.SaveFileDialog
         {
             FileName = "response" + MimeTypes.ExtensionFor(Response.ContentType),
-            Filter = "All files|*.*"
+            Filter = FileFilters.All
         };
         if (dlg.ShowDialog() == true)
             File.WriteAllBytes(dlg.FileName, Response.RawBody ?? Array.Empty<byte>());

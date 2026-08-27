@@ -189,8 +189,9 @@ public partial class MainViewModel : ObservableObject
         {
             AddHistory(request, result);
             StatusMessage = result.Response.HasError
-                ? "Request failed: " + result.Response.Error
-                : $"{result.Response.StatusCode} {result.Response.StatusText} in {TextFormatter.HumanTime(result.Response.ElapsedMs)}";
+                ? Loc.T("s.msg_request_failed", result.Response.Error)
+                : Loc.T("s.msg_status_in_time", result.Response.StatusCode, result.Response.StatusText,
+                    TextFormatter.HumanTime(result.Response.ElapsedMs));
         }
         return result;
     }
@@ -489,9 +490,9 @@ public partial class MainViewModel : ObservableObject
     {
         var dlg = new Microsoft.Win32.OpenFileDialog
         {
-            Filter = "Postman / JSON files (*.json)|*.json|All files (*.*)|*.*",
+            Filter = FileFilters.Import,
             Multiselect = true,
-            Title = "Import Postman collection or environment"
+            Title = Loc.T("s.dlg_import_title")
         };
         if (dlg.ShowDialog() != true) return;
 
@@ -580,7 +581,7 @@ public partial class MainViewModel : ObservableObject
         var dlg = new Microsoft.Win32.SaveFileDialog
         {
             FileName = Sanitize(root.Name) + ".postman_collection.json",
-            Filter = "Postman collection (*.json)|*.json"
+            Filter = FileFilters.PostmanCollection
         };
         if (dlg.ShowDialog() != true) return;
 
@@ -596,7 +597,7 @@ public partial class MainViewModel : ObservableObject
         var dlg = new Microsoft.Win32.SaveFileDialog
         {
             FileName = Sanitize(env.Name) + ".postman_environment.json",
-            Filter = "Postman environment (*.json)|*.json"
+            Filter = FileFilters.PostmanEnvironment
         };
         if (dlg.ShowDialog() != true) return;
         PersistenceService.ExportToFile(dlg.FileName, PostmanExporter.ExportEnvironment(env));
