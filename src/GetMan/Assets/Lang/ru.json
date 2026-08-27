@@ -320,5 +320,6 @@
   "s.variables": "Переменные",
   "s.variables_defined_here_are_visible_to_every_53294": "Переменные, заданные здесь, видны каждому запросу внутри этого узла. Переменная окружения с тем же именем имеет приоритет.",
   "s.waterfall": "ВОДОПАД",
+  "s.workspace_file": "Файл рабочего пространства: {0}",
   "s.x_www_form_urlencoded": "x-www-form-urlencoded"
 }

@@ -320,5 +320,6 @@
   "s.variables": "Variables",
   "s.variables_defined_here_are_visible_to_every_53294": "Variables defined here are visible to every request underneath this node. An environment variable of the same name wins.",
   "s.waterfall": "WATERFALL",
+  "s.workspace_file": "Workspace file: {0}",
   "s.x_www_form_urlencoded": "x-www-form-urlencoded"
 }

@@ -310,8 +310,7 @@ public static class Program
         return merged;
     }
 
-    private static string Version() =>
-        "GetMan " + (typeof(Program).Assembly.GetName().Version?.ToString(3) ?? "1.0.0");
+    private static string Version() => BuildInfo.Display;
 
     private static void PrintUsage()
     {

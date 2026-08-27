@@ -320,5 +320,6 @@
   "s.variables": "O'zgaruvchilar",
   "s.variables_defined_here_are_visible_to_every_53294": "Bu yerda belgilangan o'zgaruvchilar shu tugun ichidagi har bir so'rovga ko'rinadi. Xuddi shu nomdagi muhit o'zgaruvchisi ustun turadi.",
   "s.waterfall": "SHALOLA",
+  "s.workspace_file": "Ish maydoni fayli: {0}",
   "s.x_www_form_urlencoded": "x-www-form-urlencoded"
 }

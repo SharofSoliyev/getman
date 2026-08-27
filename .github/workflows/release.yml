@@ -1,0 +1,132 @@
+name: Release
+
+# Push a tag and the release builds itself:
+#
+#   git tag v1.1.0 && git push origin v1.1.0
+#
+# Or run this workflow by hand with a version, and it creates the tag for you.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release, without the leading v (for example 1.1.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  # Nothing ships that has not passed the same checks every commit passes.
+  verify:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: verify
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Release notes are generated from the history, which a shallow clone does not have.
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Work out the version
+        id: version
+        run: |
+          $raw = if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
+            '${{ github.event.inputs.version }}'
+          } else {
+            '${{ github.ref_name }}'
+          }
+
+          $version = $raw.Trim().TrimStart('v')
+          if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$') {
+            throw "'$raw' is not a version this workflow can build. Expected 1.2.3 or 1.2.3-rc.1."
+          }
+
+          # Semver says a hyphen means a pre-release, so GitHub is told the same.
+          $prerelease = if ($version -match '-') { 'true' } else { 'false' }
+
+          "version=$version"       >> $env:GITHUB_OUTPUT
+          "tag=v$version"          >> $env:GITHUB_OUTPUT
+          "prerelease=$prerelease" >> $env:GITHUB_OUTPUT
+          Write-Host "building $version (prerelease: $prerelease)"
+
+      - name: Publish both executables
+        run: |
+          $v = '${{ steps.version.outputs.version }}'
+
+          dotnet publish src/GetMan -c Release -r win-x64 --self-contained true `
+            -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:Version=$v `
+            -o publish/app --nologo
+          if ($LASTEXITCODE -ne 0) { throw "publishing the app failed" }
+
+          dotnet publish src/GetMan.Cli -c Release -r win-x64 --self-contained true `
+            -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:Version=$v `
+            -o publish/cli --nologo
+          if ($LASTEXITCODE -ne 0) { throw "publishing the CLI failed" }
+
+          New-Item -ItemType Directory -Force release | Out-Null
+          Copy-Item publish/app/GetMan.exe "release/GetMan-$v-win-x64.exe"
+          Copy-Item publish/cli/getman.exe "release/getman-$v-win-x64.exe"
+          Get-ChildItem release | Format-Table Name, Length
+          exit 0
+
+      # The binaries about to be published are the ones tested, rather than an earlier build of
+      # the same commit, and the version people will quote in a bug report is the tagged one.
+      - name: Check the published binaries
+        run: |
+          $v = '${{ steps.version.outputs.version }}'
+
+          $reported = (& "release/getman-$v-win-x64.exe" --version) -join ''
+          if ($reported.Trim() -ne "GetMan $v") {
+            throw "the published CLI reports '$reported', expected 'GetMan $v'"
+          }
+
+          & "release/GetMan-$v-win-x64.exe" --self-check
+          if ($LASTEXITCODE -ne 0) { throw "the published app failed its self-check" }
+
+          Write-Host "published binaries look right"
+          exit 0
+
+      - name: Checksums
+        run: |
+          Get-ChildItem release/*.exe | ForEach-Object {
+            '{0}  {1}' -f (Get-FileHash $_ -Algorithm SHA256).Hash.ToLower(), $_.Name
+          } | Set-Content release/SHA256SUMS.txt -Encoding ascii
+          Get-Content release/SHA256SUMS.txt
+
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = '${{ steps.version.outputs.tag }}'
+          $assets = (Get-ChildItem release | ForEach-Object { $_.FullName })
+
+          # Re-running the job on a tag that already has a release replaces the assets rather
+          # than failing, so a flaky upload can simply be retried.
+          gh release view $tag 2>$null | Out-Null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "$tag already exists, replacing its assets"
+            gh release upload $tag $assets --clobber
+            if ($LASTEXITCODE -ne 0) { throw "uploading the assets failed" }
+            exit 0
+          }
+
+          $arguments = @($tag, '--title', "GetMan $tag", '--generate-notes')
+          if ('${{ steps.version.outputs.prerelease }}' -eq 'true') { $arguments += '--prerelease' }
+
+          # A hand-run release has no tag yet, so gh makes one at the commit that was built.
+          if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
+            $arguments += @('--target', '${{ github.sha }}')
+          }
+
+          gh release create @arguments $assets
+          if ($LASTEXITCODE -ne 0) { throw "creating the release failed" }
+          exit 0

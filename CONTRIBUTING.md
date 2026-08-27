@@ -109,6 +109,36 @@ Match the file you are editing. A few conventions that run through the project:
   Animate `Opacity` or a transform, or layer an overlay.
 - New user-facing text goes in the language files, not in a string literal.
 
+## Cutting a release
+
+Releases build themselves. Push a tag and that is the whole procedure:
+
+```
+git tag v1.1.0
+git push origin v1.1.0
+```
+
+`.github/workflows/release.yml` then runs the full CI workflow first — a release that cannot pass
+the checks every commit passes never gets published — and only afterwards builds the two
+executables, stamped with the version from the tag.
+
+Before it publishes anything it checks the binaries it is about to upload: the CLI has to report
+exactly the tagged version, and the app has to pass `--self-check`. So the files people download
+are the files that were tested, not an earlier build of the same commit.
+
+The release gets both executables, named with their version, and a `SHA256SUMS.txt`. Notes are
+generated from the commits since the previous tag.
+
+- A tag with a hyphen (`v1.1.0-rc.1`) is published as a **pre-release**, per semver.
+- Re-running the job on a tag that already has a release replaces the assets instead of failing,
+  so a flaky upload can just be retried.
+- To cut one without tagging locally, run the **Release** workflow from the Actions tab and give it
+  a version; it creates the tag at the commit it built.
+
+Nothing else needs its version bumped — `<Version>` in the two csproj files is only the fallback
+for a local build, and `-p:Version=` from the tag overrides it. `Settings → About` and
+`getman --version` both read the stamped value, which is what a bug report should quote.
+
 ## Reporting a bug
 
 Open an issue with the GetMan version, your Windows version, what you did, what happened, and what

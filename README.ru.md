@@ -11,6 +11,9 @@
 
 [English](README.md) · **Русский** · [O'zbekcha](README.uz.md)
 
+**[Скачать последний релиз](https://github.com/SharofSoliyev/getman/releases/latest)** — два
+самодостаточных исполняемых файла, без установщика и без отдельной среды выполнения.
+
 <img src="docs/images/main-ru.png" alt="GetMan выполняет запрос к postman-echo: тело ответа, тесты и тайминги" width="900">
 
 </div>

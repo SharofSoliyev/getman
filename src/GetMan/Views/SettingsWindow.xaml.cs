@@ -11,7 +11,8 @@ public partial class SettingsWindow : Window
     {
         InitializeComponent();
         DataContext = settings;
-        DataPathText.Text = "Workspace file: " + PersistenceService.WorkspacePath;
+        VersionText.Text = BuildInfo.Display;
+        DataPathText.Text = Loc.T("s.workspace_file", PersistenceService.WorkspacePath);
     }
 
     private void OnBrowseCert(object sender, RoutedEventArgs e)

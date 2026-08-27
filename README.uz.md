@@ -11,6 +11,9 @@
 
 [English](README.md) · [Русский](README.ru.md) · **O'zbekcha**
 
+**[Oxirgi relizni yuklab olish](https://github.com/SharofSoliyev/getman/releases/latest)** — ikkita
+mustaqil ishlaydigan fayl, o'rnatuvchi ham, alohida runtime ham kerak emas.
+
 <img src="docs/images/main-uz.png" alt="GetMan postman-echo'ga so'rov yubormoqda: javob tanasi, testlar va vaqtlar" width="900">
 
 </div>

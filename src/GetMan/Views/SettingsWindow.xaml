@@ -99,7 +99,7 @@
 
             <TabItem Header="{loc:T s.about}">
                 <StackPanel Margin="20,18">
-                    <TextBlock Text="GetMan" FontSize="20" FontWeight="SemiBold" />
+                    <TextBlock x:Name="VersionText" FontSize="20" FontWeight="SemiBold" />
                     <TextBlock Text="{loc:T s.native_windows_api_client_a_postman_alternat_31372}"
                                Style="{StaticResource Caption}" Margin="0,6,0,0" TextWrapping="Wrap" />
                     <TextBlock x:Name="DataPathText" Style="{StaticResource Caption}" Margin="0,16,0,0" TextWrapping="Wrap" />

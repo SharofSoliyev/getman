@@ -11,6 +11,9 @@
 
 **English** · [Русский](README.ru.md) · [O'zbekcha](README.uz.md)
 
+**[Download the latest release](https://github.com/SharofSoliyev/getman/releases/latest)** — two
+self-contained executables, no installer and no runtime to fetch.
+
 <img src="docs/images/main-dark.png" alt="GetMan running a request against postman-echo, showing the response body, tests and timings" width="900">
 
 </div>

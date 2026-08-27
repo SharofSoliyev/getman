@@ -5,6 +5,8 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  # Called by release.yml, so a release runs exactly the checks a commit runs.
+  workflow_call:
 
 jobs:
   build:
