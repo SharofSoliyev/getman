@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Fluent = Wpf.Ui.Controls;
 using GetMan.Models;
 using GetMan.ViewModels;
 using GetMan.Views;
@@ -22,6 +23,55 @@ public partial class MainWindow : Window
         DataContext = _vm;
         Closing += (_, _) => _vm.Shutdown();
         ApplyWindowStateChrome();
+        SourceInitialized += (_, _) => ApplyBackdrop();
+    }
+
+    /// <summary>
+    /// Mica tints the window with the desktop wallpaper. It is asked for, not assumed:
+    /// Windows 10 has no such backdrop, and a transparent window that never got one shows
+    /// the desktop straight through. Only the app bar and the status strip are let in on it
+    /// - the body row stays opaque, because that is where the text is and the wallpaper
+    /// behind it is anyone's guess.
+    /// </summary>
+    private void ApplyBackdrop()
+    {
+        if (App.Offscreen || !TransparencyEnabled()) return;
+        if (!Fluent.WindowBackdrop.IsSupported(Fluent.WindowBackdropType.Mica)) return;
+        if (!Fluent.WindowBackdrop.ApplyBackdrop(this, Fluent.WindowBackdropType.Mica)) return;
+
+        _backdrop = true;
+        VeilChrome();
+        Controls.ThemeManager.ThemeChanged += VeilChrome;
+    }
+
+    /// <summary>
+    /// IsSupported only asks the OS build. Turning off "Transparency effects" in Settings leaves
+    /// the backdrop call reporting success while DWM draws nothing, and a transparent window would
+    /// then show the desktop through the two strips - so the setting is read as well.
+    /// </summary>
+    private static bool TransparencyEnabled()
+    {
+        try
+        {
+            using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+                @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+            return key?.GetValue("EnableTransparency") is not int value || value != 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private bool _backdrop;
+
+    /// <summary>Re-read after a theme swap: the veil brush is a token like any other.</summary>
+    private void VeilChrome()
+    {
+        if (!_backdrop) return;
+        Background = Brushes.Transparent;
+        AppBar.SetResourceReference(BackgroundProperty, "Bg2Veil");
+        StatusBar.SetResourceReference(BackgroundProperty, "Bg2Veil");
     }
 
     #region window chrome

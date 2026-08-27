@@ -94,9 +94,8 @@
         </Grid.RowDefinitions>
 
         <!-- ================================================= app bar ==== -->
-        <Border Grid.Row="0" Background="{DynamicResource Bg2}"
- Padding="14,0" Height="52"
-                                  Panel.ZIndex="2">
+        <Border x:Name="AppBar" Grid.Row="0" Background="{DynamicResource Bg2}"
+                Padding="14,0" Height="52" Panel.ZIndex="2">
             <!-- The two ends carry controls, so they opt out of the drag region; the gap between
                  them stays draggable, which is what makes the bar behave like a title bar. -->
             <DockPanel>
@@ -258,7 +257,9 @@
         </Border>
 
         <!-- ==================================================== body ==== -->
-        <Grid Grid.Row="1">
+        <!-- Opaque even under a Mica backdrop: the wallpaper may be anything, and this row is
+             where the text lives. Only the two chrome strips let it through. -->
+        <Grid Grid.Row="1" Background="{DynamicResource Bg1}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="278" MinWidth="210" />
@@ -703,7 +704,7 @@
         </Grid>
 
         <!-- =============================================== status bar ==== -->
-        <Border Grid.Row="2" Background="{DynamicResource Bg2}" BorderBrush="{DynamicResource BorderBrushSoft}"
+        <Border x:Name="StatusBar" Grid.Row="2" Background="{DynamicResource Bg2}" BorderBrush="{DynamicResource BorderBrushSoft}"
                 BorderThickness="0,1,0,0" Padding="14,0" Height="30">
             <DockPanel>
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">

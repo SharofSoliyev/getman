@@ -10,6 +10,9 @@ namespace GetMan;
 public partial class App : Application
 {
     [DllImport("kernel32.dll")] private static extern bool AttachConsole(int processId);
+    /// <summary>True for --self-check, --render and --shots: a window is built but not used.</summary>
+    internal static bool Offscreen { get; private set; }
+
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -21,6 +24,12 @@ public partial class App : Application
         {
             if (args.ExceptionObject is Exception ex) LogCrash(ex);
         };
+
+        // Every alternate entry point renders a window nobody looks at. A Mica backdrop
+        // would put whatever wallpaper the build machine has behind the chrome strips, so
+        // the screenshots would differ per machine; MainWindow reads this and stays opaque.
+        Offscreen = e.Args.Contains("--self-check") || e.Args.Contains("--render")
+                    || e.Args.Contains("--shots");
 
         base.OnStartup(e);
 

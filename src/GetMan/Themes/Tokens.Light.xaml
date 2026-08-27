@@ -30,6 +30,9 @@
     <SolidColorBrush x:Key="Bg0" Color="{StaticResource Bg0Color}" />
     <SolidColorBrush x:Key="Bg1" Color="{StaticResource Bg1Color}" />
     <SolidColorBrush x:Key="Bg2" Color="{StaticResource Bg2Color}" />
+    <!-- Bg2 with the alpha a Mica backdrop needs; used for the app bar and the status
+         strip only when the backdrop actually took, so it is never seen on its own. -->
+    <SolidColorBrush x:Key="Bg2Veil" Color="#D9F1F5F9" />
     <SolidColorBrush x:Key="Bg3" Color="{StaticResource Bg3Color}" />
     <SolidColorBrush x:Key="Bg4" Color="{StaticResource Bg4Color}" />
     <SolidColorBrush x:Key="BorderBrushSoft" Color="{StaticResource BorderSoftColor}" />
