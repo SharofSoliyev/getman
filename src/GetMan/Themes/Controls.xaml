@@ -65,6 +65,16 @@
         <Setter Property="FontFamily" Value="{DynamicResource UiFontMedium}" />
     </Style>
 
+    <!-- The label above a field. Fluent puts it there rather than floating it inside the control,
+         so it is small enough that a label and its control still fit a 52px bar. -->
+    <Style x:Key="FieldLabel" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource FgMuted}" />
+        <Setter Property="FontFamily" Value="{DynamicResource UiFontMedium}" />
+        <Setter Property="FontSize" Value="9" />
+        <Setter Property="Margin" Value="2,0,0,2" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
     <Style x:Key="MonoText" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
         <Setter Property="FontSize" Value="12" />
@@ -187,7 +197,6 @@
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushMain}" />
         <Setter Property="CaretBrush" Value="{DynamicResource Accent}" />
         <Setter Property="materialDesign:TextFieldAssist.TextFieldCornerRadius" Value="6" />
-        <Setter Property="materialDesign:HintAssist.Foreground" Value="{DynamicResource FgMuted}" />
     </Style>
 
     <!-- Chromeless field used inside data grids, the URL bar and the tree rename box. -->

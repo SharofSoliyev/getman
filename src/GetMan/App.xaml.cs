@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace GetMan;
@@ -265,7 +266,13 @@ public partial class App : Application
 
     private static void Capture(Window window, string outputPath)
     {
-        var root = (FrameworkElement)window.Content;
+        // The adorner layer sits above the content, not inside it, so capturing window.Content
+        // leaves out everything drawn there - the placeholder hints, most visibly. Rendering from
+        // the window's own visual child picks up the AdornerDecorator with them.
+        var root = VisualTreeHelper.GetChildrenCount(window) > 0
+            ? VisualTreeHelper.GetChild(window, 0) as FrameworkElement ?? (FrameworkElement)window.Content
+            : (FrameworkElement)window.Content;
+
         root.UpdateLayout();
         ForceOpaque(root);
         root.UpdateLayout();

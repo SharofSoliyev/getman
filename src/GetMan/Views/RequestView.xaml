@@ -258,15 +258,17 @@
 
                             <WrapPanel Margin="0,16,0,0">
                                 <TextBox Width="150" Margin="0,0,14,12"
-                                         materialDesign:HintAssist.Hint="{loc:T s.maximum_redirects}"
+                                         ctl:PlaceholderAssist.Text="{loc:T s.maximum_redirects}"
                                          Text="{Binding Request.Settings.MaxRedirects}" />
                                 <TextBox Width="180" Margin="0,0,14,12"
-                                         materialDesign:HintAssist.Hint="{loc:T s.timeout_in_ms_0_none}"
+                                         ctl:PlaceholderAssist.Text="{loc:T s.timeout_in_ms_0_none}"
                                          Text="{Binding Request.Settings.TimeoutMs}" />
-                                <ComboBox Width="150" Margin="0,0,14,12"
-                                          materialDesign:HintAssist.Hint="{loc:T s.http_version}"
-                                          ItemsSource="{Binding HttpVersions, ElementName=Root}"
-                                          SelectedValue="{Binding Request.Settings.HttpVersion, Mode=TwoWay}" />
+                                <StackPanel Margin="0,0,14,12">
+                                    <TextBlock Text="{loc:T s.http_version}" Style="{StaticResource FieldLabel}" />
+                                    <ComboBox Width="150"
+                                              ItemsSource="{Binding HttpVersions, ElementName=Root}"
+                                              SelectedValue="{Binding Request.Settings.HttpVersion, Mode=TwoWay}" />
+                                </StackPanel>
                             </WrapPanel>
                         </StackPanel>
                     </ScrollViewer>
