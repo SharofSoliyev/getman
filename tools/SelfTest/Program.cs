@@ -65,6 +65,12 @@ public static class Program
         Section("Secret encryption (DPAPI)");
         TestSecretVault();
 
+        Section("Server-sent event parsing");
+        TestSseParser();
+
+        Section("WebSocket url handling");
+        TestWebSocketUri();
+
         Section("OpenAPI 3 import");
         TestOpenApiImport();
 
@@ -276,6 +282,83 @@ public static class Program
         {
             try { Directory.Delete(dir, true); } catch { }
         }
+    }
+
+    /// <summary>
+    /// The event-stream format is fiddly in ways that only show up against a real server - a
+    /// missing space rule here silently truncates every payload - so the parser is exercised on
+    /// its own rather than only through a socket.
+    /// </summary>
+    private static void TestSseParser()
+    {
+        StreamMessage Run(SseParser parser, params string[] lines)
+        {
+            StreamMessage last = null;
+            foreach (var line in lines) last = parser.Feed(line) ?? last;
+            return last;
+        }
+
+        var simple = Run(new SseParser(), "data: hello", "");
+        Check("a single data line becomes a message", simple?.Text == "hello", simple?.Text);
+        Check("an event with no name defaults to 'message'", simple?.EventName == "message", simple?.EventName);
+
+        var named = Run(new SseParser(), "event: tick", "id: 7", "data: {\"n\":1}", "");
+        Check("the event name is carried", named?.EventName == "tick", named?.EventName);
+        Check("the event id is carried", named?.EventId == "7", named?.EventId);
+        Check("the payload is carried verbatim", named?.Text == "{\"n\":1}", named?.Text);
+
+        var multi = Run(new SseParser(), "data: one", "data: two", "data: three", "");
+        Check("several data lines join with newlines and lose only the last one",
+            multi?.Text == "one\ntwo\nthree", multi?.Text?.Replace("\n", "\\n"));
+
+        var spacing = Run(new SseParser(), "data:no-space", "");
+        Check("the colon needs no space after it", spacing?.Text == "no-space", spacing?.Text);
+
+        var doubleSpace = Run(new SseParser(), "data:  two spaces", "");
+        Check("only one space after the colon is eaten",
+            doubleSpace?.Text == " two spaces", "[" + doubleSpace?.Text + "]");
+
+        var empty = Run(new SseParser(), "data:", "");
+        Check("an empty data field still dispatches", empty != null && empty.Text == string.Empty);
+
+        var parser = new SseParser();
+        Check("a comment line dispatches nothing", parser.Feed(": keep alive") == null);
+        Check("a keep-alive blank line dispatches nothing", parser.Feed("") == null);
+        Check("an unknown field is ignored", parser.Feed("unknown: value") == null);
+
+        var retry = new SseParser();
+        retry.Feed("retry: 2500");
+        Check("the retry hint is read", retry.RetryMs == 2500, retry.RetryMs?.ToString());
+        retry.Feed("retry: soon");
+        Check("a non-numeric retry is ignored", retry.RetryMs == 2500);
+
+        var ids = new SseParser();
+        Run(ids, "id: a1", "data: x", "");
+        Check("the last event id is remembered for a reconnect", ids.LastEventId == "a1", ids.LastEventId);
+        var second = Run(ids, "data: y", "");
+        Check("an event without an id does not inherit the previous one",
+            string.IsNullOrEmpty(second?.EventId), second?.EventId);
+
+        var reused = new SseParser();
+        Run(reused, "event: first", "data: 1", "");
+        var after = Run(reused, "data: 2", "");
+        Check("the event name resets after a dispatch", after?.EventName == "message", after?.EventName);
+    }
+
+    private static void TestWebSocketUri()
+    {
+        Check("ws:// is left alone",
+            WebSocketStreamSession.ToWebSocketUri("ws://example.com/socket").ToString() == "ws://example.com/socket");
+        Check("http:// is rewritten to ws://",
+            WebSocketStreamSession.ToWebSocketUri("http://example.com/socket").Scheme == "ws");
+        Check("https:// is rewritten to wss://",
+            WebSocketStreamSession.ToWebSocketUri("https://example.com/socket").Scheme == "wss");
+        Check("a bare host defaults to wss://",
+            WebSocketStreamSession.ToWebSocketUri("example.com/socket").Scheme == "wss");
+        Check("surrounding space is trimmed",
+            WebSocketStreamSession.ToWebSocketUri("  wss://example.com/s  ").Host == "example.com");
+        Check("the path and query survive",
+            WebSocketStreamSession.ToWebSocketUri("https://example.com/s?token=1").PathAndQuery == "/s?token=1");
     }
 
     /// <summary>

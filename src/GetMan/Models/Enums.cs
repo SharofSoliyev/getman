@@ -31,6 +31,13 @@ public enum AuthType
     Hawk
 }
 
+public enum RequestProtocol
+{
+    Http,
+    WebSocket,
+    Sse
+}
+
 public enum ParamKind
 {
     Text,

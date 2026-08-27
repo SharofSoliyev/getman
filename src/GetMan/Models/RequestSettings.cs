@@ -15,5 +15,8 @@ public partial class RequestSettings : ObservableObject
     [ObservableProperty] private bool _useServerCipherSuite;
     [ObservableProperty] private string _httpVersion = "auto";  // auto | 1.1 | 2.0 | 3.0
 
+    /// <summary>Comma separated WebSocket subprotocols offered during the handshake.</summary>
+    [ObservableProperty] private string _wsSubprotocols = string.Empty;
+
     public RequestSettings Clone() => (RequestSettings)MemberwiseClone();
 }

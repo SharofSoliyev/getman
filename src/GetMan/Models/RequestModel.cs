@@ -8,6 +8,9 @@ public partial class RequestModel : ObservableObject
 {
     [ObservableProperty] private string _method = "GET";
     [ObservableProperty] private string _url = string.Empty;
+
+    /// <summary>Http, or a long-lived WebSocket or server-sent event stream.</summary>
+    [ObservableProperty] private RequestProtocol _protocol = RequestProtocol.Http;
     [ObservableProperty] private string _description = string.Empty;
     [ObservableProperty] private string _preRequestScript = string.Empty;
     [ObservableProperty] private string _testScript = string.Empty;
@@ -24,6 +27,7 @@ public partial class RequestModel : ObservableObject
         var r = new RequestModel
         {
             Method = Method,
+            Protocol = Protocol,
             Url = Url,
             Description = Description,
             PreRequestScript = PreRequestScript,

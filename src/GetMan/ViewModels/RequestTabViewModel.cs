@@ -158,6 +158,109 @@ public partial class RequestTabViewModel : ObservableObject
 
     #endregion
 
+    #region streams (WebSocket, server-sent events)
+
+    private StreamSession _stream;
+
+    public ObservableCollection<StreamMessage> StreamMessages { get; } = new();
+
+    /// <summary>True for a protocol that holds a connection open rather than sending one request.</summary>
+    public bool IsStream => Request.Protocol != RequestProtocol.Http;
+
+    [ObservableProperty] private bool _isConnected;
+    [ObservableProperty] private bool _isConnecting;
+    [ObservableProperty] private string _composer = string.Empty;
+
+    /// <summary>Server-sent events are receive-only, so the composer is hidden for them.</summary>
+    public bool CanSendMessages => Request.Protocol == RequestProtocol.WebSocket;
+
+    [RelayCommand]
+    private async Task ToggleConnectionAsync()
+    {
+        if (_stream is { IsConnected: true })
+        {
+            await _stream.DisconnectAsync();
+            return;
+        }
+
+        _stream?.Dispose();
+        _stream = StreamSession.For(Request.Protocol);
+        if (_stream == null) return;
+
+        // Marshalled onto the UI thread: the read loop raises these from a background task.
+        _stream.Message += m => App.Current?.Dispatcher.Invoke(() => AppendStreamMessage(m));
+        _stream.ConnectedChanged += connected => App.Current?.Dispatcher.Invoke(() =>
+        {
+            IsConnected = connected;
+            IsConnecting = false;
+        });
+
+        IsConnecting = true;
+        try
+        {
+            var vars = _main.BuildResolver(Node);
+            var prepared = RequestPreparer.Prepare(Request, Node, vars, _main.Settings);
+            await _stream.ConnectAsync(prepared);
+        }
+        catch (Exception ex)
+        {
+            IsConnecting = false;
+            AppendStreamMessage(new StreamMessage
+            {
+                Direction = StreamDirection.System,
+                IsError = true,
+                Text = ex.Message
+            });
+        }
+    }
+
+    [RelayCommand]
+    private async Task SendMessageAsync()
+    {
+        if (_stream is not { IsConnected: true } || string.IsNullOrEmpty(Composer)) return;
+
+        try
+        {
+            await _stream.SendAsync(Composer);
+            Composer = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            AppendStreamMessage(new StreamMessage
+            {
+                Direction = StreamDirection.System,
+                IsError = true,
+                Text = ex.Message
+            });
+        }
+    }
+
+    [RelayCommand]
+    private void ClearStreamMessages() => StreamMessages.Clear();
+
+    /// <summary>
+    /// A busy stream can outrun the list, and an unbounded log would grow until the app died, so
+    /// the oldest lines fall off the top.
+    /// </summary>
+    private const int MaxStreamMessages = 2000;
+
+    private void AppendStreamMessage(StreamMessage message)
+    {
+        StreamMessages.Add(message);
+        while (StreamMessages.Count > MaxStreamMessages) StreamMessages.RemoveAt(0);
+    }
+
+    /// <summary>Closes the connection when the tab goes away.</summary>
+    public void CloseStream()
+    {
+        _stream?.Dispose();
+        _stream = null;
+        IsConnected = false;
+        IsConnecting = false;
+    }
+
+    #endregion
+
     #region sending
 
     [RelayCommand]
