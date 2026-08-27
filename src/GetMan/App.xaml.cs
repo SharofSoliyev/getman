@@ -123,7 +123,7 @@ public partial class App : Application
             var collection = vmForDialogs.Collections.FirstOrDefault();
 
             Shoot("environments", 900, 600, () => new Views.EnvironmentWindow(vmForDialogs));
-            Shoot("settings", 820, 620, () => new Views.SettingsWindow(vmForDialogs.Settings));
+            Shoot("settings", 820, 700, () => new Views.SettingsWindow(vmForDialogs.Settings));
             if (collection != null)
                 Shoot("runner", 1000, 640, () =>
                 {

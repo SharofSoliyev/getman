@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using GetMan.Models;
 
@@ -54,8 +55,7 @@ public static class PersistenceService
             Directory.CreateDirectory(RootDir);
             if (!File.Exists(WorkspacePath)) return Seed();
 
-            var json = File.ReadAllText(WorkspacePath);
-            var ws = JsonSerializer.Deserialize<WorkspaceFile>(json, Options) ?? Seed();
+            var ws = Read(File.ReadAllText(WorkspacePath)) ?? Seed();
             ws.Collections ??= new List<CollectionNode>();
             ws.Environments ??= new List<EnvironmentModel>();
             ws.Globals ??= new EnvironmentModel { Name = "Globals", IsGlobal = true };
@@ -71,7 +71,7 @@ public static class PersistenceService
             {
                 if (File.Exists(BackupPath))
                 {
-                    var ws = JsonSerializer.Deserialize<WorkspaceFile>(File.ReadAllText(BackupPath), Options);
+                    var ws = Read(File.ReadAllText(BackupPath));
                     if (ws != null)
                     {
                         foreach (var c in ws.Collections) c.FixupParents();
@@ -84,6 +84,29 @@ public static class PersistenceService
         }
     }
 
+    /// <summary>
+    /// Serialises the workspace and encrypts its credentials on the way out. The models keep plain
+    /// values in memory, so scripts, exports and the request builder never have to know about this.
+    /// </summary>
+    internal static string Write(WorkspaceFile ws)
+    {
+        var node = JsonSerializer.SerializeToNode(ws, Options);
+        if (node != null && ws.Settings?.EncryptSecrets != false) SecretVault.ProtectTree(node);
+        return node?.ToJsonString(Options) ?? "{}";
+    }
+
+    /// <summary>
+    /// Decryption runs whatever the setting says, so turning encryption off still reads a file
+    /// that was written while it was on.
+    /// </summary>
+    internal static WorkspaceFile Read(string json)
+    {
+        var node = JsonNode.Parse(json);
+        if (node == null) return null;
+        SecretVault.UnprotectTree(node);
+        return node.Deserialize<WorkspaceFile>(Options);
+    }
+
     private static readonly object SaveLock = new();
 
     public static void Save(WorkspaceFile ws)
@@ -93,7 +116,7 @@ public static class PersistenceService
             try
             {
                 Directory.CreateDirectory(RootDir);
-                var json = JsonSerializer.Serialize(ws, Options);
+                var json = Write(ws);
                 var tmp = WorkspacePath + ".tmp";
                 File.WriteAllText(tmp, json);
                 if (File.Exists(WorkspacePath))

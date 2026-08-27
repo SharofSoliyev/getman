@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:loc="clr-namespace:GetMan.Services"
-        Title="Settings" Height="620" Width="760"
+        Title="Settings" Height="700" Width="760"
         Background="{DynamicResource Bg1}" Foreground="{DynamicResource Fg}"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
     <Grid Margin="0">
@@ -42,6 +42,13 @@
                             <TextBlock Text="{loc:T s.history_entries_to_keep}" Style="{StaticResource Caption}" Width="190" />
                             <TextBox Width="90" Text="{Binding HistoryLimit}" />
                         </StackPanel>
+
+                        <TextBlock Text="{loc:T s.storage}" Style="{StaticResource SectionLabel}" Margin="0,22,0,0" />
+                        <CheckBox Content="{loc:T s.encrypt_secrets_in_the_workspace_file}" Margin="0,6"
+                                  IsChecked="{Binding EncryptSecrets}" />
+                        <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" MaxWidth="520"
+                                   HorizontalAlignment="Left" Margin="0,2,0,0"
+                                   Text="{loc:T s.encrypt_secrets_help}" />
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

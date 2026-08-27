@@ -62,6 +62,9 @@ public static class Program
         Section("Data files (runner and CLI)");
         TestDataFiles();
 
+        Section("Secret encryption (DPAPI)");
+        TestSecretVault();
+
         Section("OpenAPI 3 import");
         TestOpenApiImport();
 
@@ -273,6 +276,83 @@ public static class Program
         {
             try { Directory.Delete(dir, true); } catch { }
         }
+    }
+
+    /// <summary>
+    /// The workspace is the one file that holds every credential the user has typed, so what
+    /// reaches the disk is worth asserting on directly rather than trusting the round trip.
+    /// </summary>
+    private static void TestSecretVault()
+    {
+        if (!SecretVault.Available)
+        {
+            Check("DPAPI is available on this machine", false, "encryption will be skipped at run time");
+            return;
+        }
+
+        var round = SecretVault.Unprotect(SecretVault.Protect("hunter2"));
+        Check("a secret survives a protect/unprotect round trip", round == "hunter2", round);
+        Check("protecting is not the identity function",
+            SecretVault.Protect("hunter2") != "hunter2");
+        Check("ciphertext is recognisable as ciphertext",
+            SecretVault.IsProtected(SecretVault.Protect("hunter2")));
+        Check("protecting twice does not double-wrap",
+            SecretVault.IsProtected(SecretVault.Protect(SecretVault.Protect("hunter2"))) &&
+            SecretVault.Unprotect(SecretVault.Protect(SecretVault.Protect("hunter2"))) == "hunter2");
+        Check("an empty value is left alone", SecretVault.Protect(string.Empty) == string.Empty);
+        Check("plain text passes back through unprotect unchanged",
+            SecretVault.Unprotect("not encrypted") == "not encrypted");
+        Check("unreadable ciphertext is kept rather than blanked",
+            SecretVault.Unprotect("getman:enc:v1:not-base64!") == "getman:enc:v1:not-base64!");
+
+        // A whole workspace, through the real save path.
+        var workspace = PersistenceService.Seed();
+        var request = workspace.Collections[0].Flatten().First(n => n.Kind == NodeKind.Request);
+        request.Request.Auth.Type = AuthType.Bearer;
+        request.Request.Auth.Token = "tok_live_secret";
+        request.Request.Auth.Username = "alice";
+        request.Request.Auth.Password = "pa55word";
+        workspace.Settings.PostmanApiKey = "PMAK-secret";
+        workspace.Environments[0].Variables.Add(new KeyValueItem("apiKey", "sk_live_1234") { Secret = true });
+        workspace.Environments[0].Variables.Add(new KeyValueItem("baseUrl", "https://api.example.com"));
+
+        var json = PersistenceService.Write(workspace);
+
+        Check("the bearer token does not reach the file", !json.Contains("tok_live_secret"), Excerpt(json, "Token"));
+        Check("the password does not reach the file", !json.Contains("pa55word"));
+        Check("the Postman API key does not reach the file", !json.Contains("PMAK-secret"));
+        Check("a variable marked secret does not reach the file", !json.Contains("sk_live_1234"));
+        Check("a variable not marked secret stays readable", json.Contains("https://api.example.com"));
+        Check("the username is not treated as a credential", json.Contains("alice"));
+        Check("request names and urls stay readable", json.Contains("GET request"));
+
+        var reloaded = PersistenceService.Read(json);
+        var reloadedRequest = reloaded.Collections[0].Flatten().First(n => n.Kind == NodeKind.Request);
+        Check("the token comes back on load", reloadedRequest.Request.Auth.Token == "tok_live_secret",
+            reloadedRequest.Request.Auth.Token);
+        Check("the password comes back on load", reloadedRequest.Request.Auth.Password == "pa55word");
+        Check("the settings key comes back on load", reloaded.Settings.PostmanApiKey == "PMAK-secret");
+        Check("the secret variable comes back on load",
+            reloaded.Environments[0].Variables.First(v => v.Key == "apiKey").Value == "sk_live_1234");
+
+        // An export is meant to open in Postman, so it must not pick up GetMan's ciphertext.
+        var exported = PostmanExporter.ExportCollection(workspace.Collections[0]);
+        Check("an export keeps its secrets in plain text", exported.Contains("tok_live_secret"));
+        Check("an export carries no ciphertext", !exported.Contains("getman:enc:"));
+
+        // Turning it off has to mean off, and turning it on has to still read the old file.
+        workspace.Settings.EncryptSecrets = false;
+        var plain = PersistenceService.Write(workspace);
+        Check("switching encryption off writes plain text", plain.Contains("tok_live_secret"));
+        Check("a file written in plain text still loads",
+            PersistenceService.Read(plain).Collections[0].Flatten()
+                .First(n => n.Kind == NodeKind.Request).Request.Auth.Token == "tok_live_secret");
+    }
+
+    private static string Excerpt(string json, string near)
+    {
+        var index = json.IndexOf("\"" + near + "\"", StringComparison.Ordinal);
+        return index < 0 ? "not found" : json.Substring(index, Math.Min(70, json.Length - index));
     }
 
     /// <summary>Fixtures are found by walking up from the binary, so the suite runs from anywhere.</summary>

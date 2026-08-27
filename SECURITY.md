@@ -16,22 +16,32 @@ GetMan is a desktop application with no server component. It never uploads your 
 | What | Where | Notes |
 |---|---|---|
 | Collections, environments, history, settings | `%APPDATA%\GetMan\workspace.json` | one file per Windows user, plus a rolling `workspace.backup.json` |
+| Passwords, tokens and keys | the same file, DPAPI-encrypted | see below |
 | Cookies received from responses | memory only | discarded when the app closes |
 | Crash reports | `%APPDATA%\GetMan\crash.log` | written locally, never sent |
 
-**Secrets in the workspace file are stored in plain text.** Passwords, bearer tokens, API keys,
-client secrets, AWS keys and your Postman API key all live in `workspace.json` as you typed them,
-exactly as Postman's own export files do. The file is protected only by Windows file permissions on
-your user profile. Two consequences worth knowing:
+**Secrets in the workspace file are encrypted**, by default, with Windows DPAPI scoped to your user
+account (Settings → General → Storage turns it off). That covers passwords, bearer tokens, API key
+values, OAuth client secrets and tokens, AWS secret keys and session tokens, Hawk keys, the proxy
+and client-certificate passwords, your Postman API key, and any variable you mark as secret.
 
-- If `%APPDATA%` is on a roaming profile, the file — and the secrets in it — travel with it.
-- Anything that can read your user profile can read those secrets.
+What that does and does not buy you:
+
+- Another process running as **a different user** on the machine cannot read them, and neither can
+  anyone who copies `workspace.json` off the machine — including a roaming `%APPDATA%`, where the
+  file travels but the secrets do not decrypt.
+- Anything running **as you** still can, because DPAPI hands the key to your account on request.
+  Encryption at rest is not a defence against code you have already run.
+- Move the file to another machine or user and the secrets come back as `getman:enc:v1:…` rather
+  than blank. That is deliberate: a blank field looks like the secret was never set, and a request
+  would then authenticate as nobody instead of failing.
+
+**Exports are never encrypted.** `Export as Postman v2.1` and environment exports are meant to open
+in Postman and in other people's tools, so treat an export the way you would treat any file with a
+token in it.
 
 Prefer environment variables (`{{token}}`) over hard-coded values where you can, so a secret lives
 in one place you can clear.
-
-Encrypting the secret fields with DPAPI is an open item; if that matters for your use, say so in an
-issue.
 
 ## Scope
 
@@ -41,5 +51,6 @@ read or write outside the workspace, execute arbitrary code, or exfiltrate data.
 The JavaScript sandbox (Jint) runs pre-request and test scripts with a timeout and without file
 system or process access. A way out of that sandbox is in scope.
 
-Out of scope: the plain-text storage described above, which is documented behaviour rather than a
-vulnerability, and anything requiring an attacker to already have write access to your user profile.
+Out of scope: reading a secret from a process already running as the same Windows user, which DPAPI
+does not and cannot prevent, and anything requiring an attacker to already have write access to your
+user profile.

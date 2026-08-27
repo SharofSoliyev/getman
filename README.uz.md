@@ -30,7 +30,9 @@ dotnet publish src/GetMan.Cli -c Release -r win-x64 --self-contained true \
 ```
 
 Ish maydoni `%APPDATA%\GetMan\workspace.json` faylida saqlanadi (zaxira nusxasi bilan), har bir
-Windows foydalanuvchisi uchun alohida. Hech narsa hech qayerga yuborilmaydi.
+Windows foydalanuvchisi uchun alohida. Hech narsa hech qayerga yuborilmaydi, parol, token va
+kalitlar esa Windows DPAPI bilan diskda shifrlanadi — bu nimani himoya qiladi va nimani yo'q,
+[SECURITY.md](SECURITY.md) da yozilgan.
 
 ## Interfeys tillari
 
@@ -186,6 +188,9 @@ natijalari, konsol paneli va vaqt taqsimoti (DNS, TCP, TLS, birinchi baytgacha v
 **Kolleksiya runneri** — so'rovlarni tanlang, takrorlashlar sonini va kechikishni belgilang, CSV yoki
 JSON ma'lumot faylidan yuriting, birinchi muvaffaqiyatsizlikda to'xtang, `setNextRequest` ni hisobga
 oling va har bir so'rov test natijalarini jonli kuzating.
+
+**Maxfiy ma'lumotlar diskda shifrlanadi** — parol, token va kalitlar faylga tushishidan oldin
+Windows DPAPI bilan muhrlanadi, eksport esa ochiq qoladi, shunda u Postman'da ochilaveradi.
 
 **Buyruq satri** — oynasiz, o'sha runner, CI uchun.
 [Kolleksiyalarni buyruq satridan ishga tushirish](#kolleksiyalarni-buyruq-satridan-ishga-tushirish)

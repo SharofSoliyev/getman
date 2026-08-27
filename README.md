@@ -30,7 +30,8 @@ dotnet publish src/GetMan.Cli -c Release -r win-x64 --self-contained true \
 ```
 
 Workspace data lives in `%APPDATA%\GetMan\workspace.json` (with a rolling backup), one file per
-Windows user. Nothing is uploaded anywhere.
+Windows user. Nothing is uploaded anywhere, and passwords, tokens and keys are encrypted on disk
+with Windows DPAPI — see [SECURITY.md](SECURITY.md) for what that does and does not protect.
 
 ## Interface languages
 
@@ -182,6 +183,9 @@ pane, and a timing breakdown (DNS, TCP, TLS, time-to-first-byte, download, total
 
 **Collection runner** — pick requests, set iterations and delay, drive it from a CSV or JSON data
 file, stop on failure, honour `setNextRequest`, and watch per-request test results live.
+
+**Secrets encrypted at rest** — passwords, tokens and keys are sealed with Windows DPAPI before
+they touch the disk, and exports stay plain so they still open in Postman.
 
 **Command line** — the same runner without the window, for CI. See
 [Running collections from the command line](#running-collections-from-the-command-line).

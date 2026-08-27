@@ -18,6 +18,9 @@ public partial class AppSettings : ObservableObject
     /// <summary>Interface language: en, ru or uz. Empty means "follow Windows on first run".</summary>
     [ObservableProperty] private string _language = string.Empty;
 
+    /// <summary>Encrypt passwords, tokens and keys in workspace.json with Windows DPAPI.</summary>
+    [ObservableProperty] private bool _encryptSecrets = true;
+
     [ObservableProperty] private double _editorFontSize = 13;
     [ObservableProperty] private string _editorFontFamily = "Cascadia Mono, Consolas";
     [ObservableProperty] private bool _wordWrap = true;
