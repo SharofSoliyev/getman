@@ -78,11 +78,24 @@ missing a key, so translations cannot silently drift.
   downloads the ones you pick. Since Postman 10 the desktop app is cloud-backed, so this is exactly
   what the installed app shows.
 
-GetMan detects a local Postman install and reports its version, but it deliberately does **not**
-try to read Postman's own database: that store is a Chromium IndexedDB (LevelDB + snappy + V8
-structured clone), it is undocumented, it changes between versions, and the files are locked while
-Postman runs. Scavenging it produced no recoverable collections in testing, so the two routes above
-are what GetMan offers.
+### Why GetMan does not read Postman's own database
+
+GetMan detects a local Postman install and reports its version, but it does not read Postman's
+store, because since Postman 10 there is nothing there worth reading:
+
+- **Saved requests are not on disk.** They live in your Postman account. That is what the account
+  route above fetches, and `GET /collections` covers every workspace the key can reach, so nothing
+  saved is left behind.
+- **The local Chromium IndexedDB holds app state**, not request bodies — which panel is open, which
+  tab is active, and a cache of environment *values*. Measured on a machine with eight collections
+  and roughly two hundred requests, every local store together held twelve non-Postman URLs, and
+  all of them were environment values.
+- **Unsaved edits in an open tab are held in memory** and never written out at all.
+
+So a request that is open in Postman but not saved cannot be imported by anything reading the disk.
+Save the tab in Postman — GetMan's account import has it a moment later, from the same cloud.
+`Settings → Data → Export Data` is the other complete route: one dump with everything Postman holds,
+including local and Scratch Pad collections, in a format GetMan already reads.
 
 ## What GetMan can import
 

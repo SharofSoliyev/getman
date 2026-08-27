@@ -79,11 +79,24 @@ Paneldagi **Postman'dan** tugmasi ikkita ishonchli yo'li bor dialogni ochadi:
   so'ng tanlanganlarini yuklab oladi. Postman 10 dan boshlab dastur bulut bilan sinxronlanadi,
   shuning uchun bu aynan o'rnatilgan dastur ko'rsatayotgan narsa.
 
-GetMan o'rnatilgan Postman'ni aniqlaydi va uning versiyasini ko'rsatadi, lekin ataylab uning o'z
-bazasini o'qishga **urinmaydi**: u Chromium IndexedDB (LevelDB + snappy + V8 structured clone),
-hujjatlashtirilmagan, versiyadan versiyaga o'zgaradi va Postman ishlab turganda fayllar qulflangan
-bo'ladi. Sinov chog'ida undan birorta ham tiklab bo'ladigan kolleksiya chiqmadi, shuning uchun
-GetMan yuqoridagi ikki yo'lni taklif qiladi.
+### Nega GetMan Postman'ning o'z bazasini o'qimaydi
+
+GetMan o'rnatilgan Postman'ni aniqlaydi va versiyasini ko'rsatadi, lekin uning omborini o'qimaydi —
+Postman 10 dan beri u yerda o'qishga arziydigan narsa yo'q:
+
+- **Saqlangan so'rovlar diskda emas.** Ular Postman akkauntingizda yashaydi. Yuqoridagi akkaunt yo'li
+  aynan shularni oladi, `GET /collections` esa kalit yeta oladigan barcha vorkspeyslarni qamraydi —
+  demak saqlangan hech narsa qolib ketmaydi.
+- **Lokal Chromium IndexedDB dastur holatini saqlaydi**, so'rov tanalarini emas: qaysi panel ochiq,
+  qaysi yorliq faol va muhit *qiymatlari* keshi. Sakkizta kolleksiya va taxminan ikki yuz so'rovi bor
+  mashinada barcha lokal omborlar birgalikda o'n ikkita postman'ga aloqasi yo'q URL saqlagan edi va
+  ularning hammasi muhit o'zgaruvchilari qiymati bo'lib chiqdi.
+- **Ochiq yorliqdagi saqlanmagan o'zgarishlar xotirada turadi** va umuman diskka yozilmaydi.
+
+Shuning uchun Postman'da ochiq, lekin saqlanmagan so'rovni diskdan o'qiydigan hech narsa ololmaydi.
+Yorliqni Postman'da saqlang — GetMan'ning akkaunt importi uni bir lahzadan keyin o'sha bulutdan
+oladi. `Settings → Data → Export Data` ikkinchi to'liq yo'l: Postman'dagi hamma narsa, jumladan
+lokal va Scratch Pad kolleksiyalari, GetMan allaqachon o'qiydigan formatdagi bitta dumpda.
 
 ## GetMan nimalarni import qila oladi
 
