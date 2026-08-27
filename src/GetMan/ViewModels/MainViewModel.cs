@@ -43,8 +43,10 @@ public partial class MainViewModel : ObservableObject
 
         SelectedEnvironment = Environments.FirstOrDefault(e => e.Id == Settings.ActiveEnvironmentId);
 
+        // Applied either way, not only for light: the Fluent controls take their accent from
+        // resources this writes at run time, so skipping it on a dark start left them salmon.
         IsLightTheme = string.Equals(Settings.Theme, "Light", StringComparison.OrdinalIgnoreCase);
-        if (IsLightTheme) Controls.ThemeManager.Apply(Controls.AppTheme.Light);
+        Controls.ThemeManager.Apply(IsLightTheme ? Controls.AppTheme.Light : Controls.AppTheme.Dark);
 
         RestoreTabs();
         if (Tabs.Count == 0) NewRequest();

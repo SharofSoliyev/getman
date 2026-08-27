@@ -147,6 +147,8 @@
     <Style x:Key="IconBtn" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
         <Setter Property="Width" Value="30" />
         <Setter Property="Height" Value="30" />
+        <!-- Fluent buttons carry a generous default padding, which at 30x30 clips the icon. -->
+        <Setter Property="Padding" Value="0" />
         <Setter Property="Foreground" Value="{DynamicResource FgDim}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="ctl:HoverAssist.Scale" Value="1.18" />
@@ -300,24 +302,93 @@
     </Style>
 
     <!-- ========================================== toggles / choices ==== -->
-    <Style TargetType="CheckBox" BasedOn="{StaticResource DefaultCheckBoxStyle}">
+    <!--
+        The tick and the dot are drawn here rather than inherited. Both kits render them from
+        their own palette through a chain of keys that does not end at our tokens - Material used
+        its primary, Fluent reaches past the accent override to its own checked fill - and chasing
+        those keys is a running battle. Eighteen lines of template ends it, and the sizes then
+        belong to the 4/8 spacing scale like everything else.
+    -->
+    <Style TargetType="CheckBox">
         <Setter Property="FontSize" Value="12.5" />
         <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
         <Setter Property="Foreground" Value="{DynamicResource Fg}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="ctl:HoverAssist.Scale" Value="1.06" />
         <Setter Property="FocusVisualStyle" Value="{StaticResource RingFocus}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <StackPanel Orientation="Horizontal" Background="Transparent">
+                        <Border x:Name="box" Width="17" Height="17" CornerRadius="5"
+                                VerticalAlignment="Center"
+                                Background="Transparent"
+                                BorderBrush="{DynamicResource BorderBrushMain}" BorderThickness="1.4">
+                            <Path x:Name="tick" Stretch="Uniform" Margin="3.5" Opacity="0"
+                                  Data="M 0,5 L 3.6,8.6 L 10,1.4"
+                                  Stroke="{DynamicResource OnAction}" StrokeThickness="2"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
+                        </Border>
+                        <ContentPresenter Margin="9,0,0,0" VerticalAlignment="Center" RecognizesAccessKey="True" />
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="box" Property="Background" Value="{DynamicResource Action}" />
+                            <Setter TargetName="box" Property="BorderBrush" Value="{DynamicResource Action}" />
+                            <Setter TargetName="tick" Property="Opacity" Value="1" />
+                        </Trigger>
+                        <!-- Indeterminate is a dash, not a tick: a half-selected set is not "on". -->
+                        <Trigger Property="IsChecked" Value="{x:Null}">
+                            <Setter TargetName="box" Property="Background" Value="{DynamicResource Action}" />
+                            <Setter TargetName="box" Property="BorderBrush" Value="{DynamicResource Action}" />
+                            <Setter TargetName="tick" Property="Data" Value="M 0,5 L 10,5" />
+                            <Setter TargetName="tick" Property="Opacity" Value="1" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="box" Property="BorderBrush" Value="{DynamicResource Accent}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
-    <Style TargetType="RadioButton" BasedOn="{StaticResource DefaultRadioButtonStyle}">
+    <Style TargetType="RadioButton">
         <Setter Property="FontSize" Value="12.5" />
         <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
         <Setter Property="Foreground" Value="{DynamicResource Fg}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="ctl:HoverAssist.Scale" Value="1.05" />
         <Setter Property="FocusVisualStyle" Value="{StaticResource RingFocus}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <StackPanel Orientation="Horizontal" Background="Transparent">
+                        <Grid Width="17" Height="17" VerticalAlignment="Center">
+                            <Ellipse x:Name="ring" Stroke="{DynamicResource BorderBrushMain}" StrokeThickness="1.4" />
+                            <Ellipse x:Name="dot" Width="7" Height="7" Opacity="0"
+                                     Fill="{DynamicResource Action}" />
+                        </Grid>
+                        <ContentPresenter Margin="9,0,0,0" VerticalAlignment="Center" RecognizesAccessKey="True" />
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="ring" Property="Stroke" Value="{DynamicResource Action}" />
+                            <Setter TargetName="dot" Property="Opacity" Value="1" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="ring" Property="Stroke" Value="{DynamicResource Accent}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- ================================================ tab strips ==== -->
