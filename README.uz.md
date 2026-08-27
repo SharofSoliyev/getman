@@ -24,7 +24,7 @@ bir zumda ochiladi va mavjud Postman kolleksiyalaringizni o'z holicha import qil
 ```
 dotnet run --project src/GetMan            # manbadan ishga tushirish
 dotnet publish src/GetMan -c Release -r win-x64 --self-contained true \
-  -p:PublishSingleFile=true -o dist        # bitta faylli GetMan.exe
+  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o dist        # bitta faylli GetMan.exe
 ```
 
 Ish maydoni `%APPDATA%\GetMan\workspace.json` faylida saqlanadi (zaxira nusxasi bilan), har bir

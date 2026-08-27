@@ -32,7 +32,8 @@ jobs:
       - name: Publish single file
         run: >
           dotnet publish src/GetMan -c Release -r win-x64 --self-contained true
-          -p:PublishSingleFile=true -o dist --nologo
+          -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true
+          -o dist --nologo
 
       - uses: actions/upload-artifact@v4
         with:

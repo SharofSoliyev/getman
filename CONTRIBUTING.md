@@ -18,7 +18,7 @@ To produce the single-file executable:
 
 ```
 dotnet publish src/GetMan -c Release -r win-x64 --self-contained true \
-  -p:PublishSingleFile=true -o dist
+  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o dist
 ```
 
 ## Before you open a pull request
