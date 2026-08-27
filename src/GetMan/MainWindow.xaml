@@ -5,12 +5,28 @@
         xmlns:models="clr-namespace:GetMan.Models"
         xmlns:views="clr-namespace:GetMan.Views"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         Title="GetMan" Height="880" Width="1480" MinWidth="980" MinHeight="600"
         Background="{DynamicResource Bg1}" Foreground="{DynamicResource Fg}"
         FontFamily="{StaticResource UiFont}"
         WindowStartupLocation="CenterScreen"
         UseLayoutRounding="True" TextOptions.TextFormattingMode="Ideal"
-        TextElement.FontSize="13">
+        TextElement.FontSize="13"
+        StateChanged="OnWindowStateChanged">
+
+    <!--
+        The app bar is the title bar. A native caption above it would be a second strip in colours
+        the theme does not control, so the window draws its own: CaptionHeight matches the bar, and
+        the buttons at its right end are ours. Everything else about the window - snapping, the
+        maximise flyout, resizing, double-click to maximise - is still the system's.
+    -->
+    <WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="52"
+                            ResizeBorderThickness="6"
+                            GlassFrameThickness="0"
+                            CornerRadius="0"
+                            UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
 
     <Window.Resources>
         <Style x:Key="TreeNodeItem" TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
@@ -67,7 +83,9 @@
         <KeyBinding Key="D" Modifiers="Control+Shift" Command="{Binding ToggleThemeCommand}" />
     </Window.InputBindings>
 
-    <Grid>
+    <!-- x:Name so the code-behind can give the padding back when the window is maximised: a
+         WindowChrome window grows past the screen edge by its own resize border. -->
+    <Grid x:Name="WindowRoot">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -78,8 +96,11 @@
         <materialDesign:ColorZone Grid.Row="0" Mode="Standard" Background="{DynamicResource Bg2}"
                                   materialDesign:ElevationAssist.Elevation="Dp3" Padding="14,0" Height="52"
                                   Panel.ZIndex="2">
+            <!-- The two ends carry controls, so they opt out of the drag region; the gap between
+                 them stays draggable, which is what makes the bar behave like a title bar. -->
             <DockPanel>
-                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True">
                     <Border Width="28" Height="28" CornerRadius="8" Background="{DynamicResource Action}">
                         <materialDesign:PackIcon Kind="LightningBolt" Width="18" Height="18"
                                                  Foreground="{DynamicResource OnAction}"
@@ -142,7 +163,8 @@
                     </Button>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True">
                     <!-- active environment: a live dot plus the picker -->
                     <Ellipse Width="8" Height="8" VerticalAlignment="Center" Margin="0,0,9,0"
                              ToolTip="{loc:T s.an_environment_is_active}">
@@ -191,6 +213,39 @@
                             </materialDesign:PackIcon.Style>
                         </materialDesign:PackIcon>
                     </Button>
+
+                    <!-- Window buttons. Sized and spaced like the system's so the reach is
+                         familiar, but drawn from the theme tokens like everything else. -->
+                    <StackPanel Orientation="Horizontal" Margin="12,0,-14,0" VerticalAlignment="Stretch">
+                        <Button Style="{StaticResource CaptionButton}" Click="OnMinimiseWindow"
+                                AutomationProperties.Name="{loc:T s.minimise}" ToolTip="{loc:T s.minimise}">
+                            <Path Data="M 0,0 H 10" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  StrokeThickness="1" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                        </Button>
+
+                        <Button x:Name="MaximiseButton" Style="{StaticResource CaptionButton}"
+                                Click="OnMaximiseWindow"
+                                AutomationProperties.Name="{loc:T s.maximise}" ToolTip="{loc:T s.maximise}">
+                            <Grid>
+                                <!-- Two glyphs rather than one that changes: a Path cannot be
+                                     retargeted by a trigger, which cost an afternoon once already. -->
+                                <Path x:Name="MaximiseGlyph" Data="M 0,0 H 10 V 10 H 0 Z"
+                                      Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                      StrokeThickness="1" />
+                                <Path x:Name="RestoreGlyph" Visibility="Collapsed"
+                                      Data="M 0,2.5 H 7.5 V 10 H 0 Z M 2.5,2.5 V 0 H 10 V 7.5 H 7.5"
+                                      Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                      StrokeThickness="1" />
+                            </Grid>
+                        </Button>
+
+                        <Button Style="{StaticResource CloseCaptionButton}" Click="OnCloseWindow"
+                                AutomationProperties.Name="{loc:T s.close}" ToolTip="{loc:T s.close}">
+                            <Path Data="M 0,0 L 10,10 M 10,0 L 0,10"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  StrokeThickness="1" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                        </Button>
+                    </StackPanel>
                 </StackPanel>
             </DockPanel>
         </materialDesign:ColorZone>

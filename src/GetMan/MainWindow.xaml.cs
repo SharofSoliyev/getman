@@ -21,7 +21,48 @@ public partial class MainWindow : Window
         _vm = new MainViewModel();
         DataContext = _vm;
         Closing += (_, _) => _vm.Shutdown();
+        ApplyWindowStateChrome();
     }
+
+    #region window chrome
+
+    private void OnMinimiseWindow(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+
+    private void OnMaximiseWindow(object sender, RoutedEventArgs e) =>
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+
+    private void OnCloseWindow(object sender, RoutedEventArgs e) => Close();
+
+    private void OnWindowStateChanged(object sender, EventArgs e) => ApplyWindowStateChrome();
+
+    /// <summary>
+    /// A WindowChrome window maximises to the monitor rather than the work area's visible edge,
+    /// so its own resize border ends up off-screen and the app bar loses its top few pixels. The
+    /// content gets that thickness back as padding while maximised.
+    ///
+    /// The maximise glyph is swapped by visibility rather than by retargeting one Path: a trigger
+    /// cannot change Path.Data on a named element inside a template.
+    /// </summary>
+    private void ApplyWindowStateChrome()
+    {
+        var maximised = WindowState == WindowState.Maximized;
+
+        WindowRoot.Margin = maximised
+            ? new Thickness(SystemParameters.WindowResizeBorderThickness.Left,
+                            SystemParameters.WindowResizeBorderThickness.Top,
+                            SystemParameters.WindowResizeBorderThickness.Right,
+                            SystemParameters.WindowResizeBorderThickness.Bottom)
+            : new Thickness(0);
+
+        MaximiseGlyph.Visibility = maximised ? Visibility.Collapsed : Visibility.Visible;
+        RestoreGlyph.Visibility = maximised ? Visibility.Visible : Visibility.Collapsed;
+
+        var tip = Services.Loc.T(maximised ? "s.restore" : "s.maximise");
+        MaximiseButton.ToolTip = tip;
+        System.Windows.Automation.AutomationProperties.SetName(MaximiseButton, tip);
+    }
+
+    #endregion
 
     #region tree
 

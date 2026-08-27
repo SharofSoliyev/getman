@@ -88,9 +88,10 @@ public partial class App : Application
             {
                 Controls.ThemeManager.Apply(shot.Light ? Controls.AppTheme.Light : Controls.AppTheme.Dark);
 
+                // WindowStyle is left alone: the title bar is part of the content now, so
+                // stripping the chrome would hide the very thing the shot should show.
                 var window = new MainWindow
                 {
-                    WindowStyle = WindowStyle.None,
                     ShowInTaskbar = false,
                     WindowStartupLocation = WindowStartupLocation.Manual,
                     Left = -4000,
