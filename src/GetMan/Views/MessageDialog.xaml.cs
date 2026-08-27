@@ -85,7 +85,7 @@ public partial class MessageDialog : Window
         }
 
         var (icon, token) = Style(kind);
-        dialog.Icon.Kind = icon;
+        dialog.Icon.Symbol = icon;
         dialog.Icon.Foreground = Brush(token);
         dialog.IconWell.Background = Brush(token + "Wash") ?? Brush("Bg3");
         return dialog;
@@ -107,13 +107,13 @@ public partial class MessageDialog : Window
         Show(title ?? Loc.T("s.dlg_are_you_sure"), message, DialogKind.Question,
             primary ?? Loc.T("s.delete"), secondary ?? Loc.T("s.cancel"), owner: owner);
 
-    private static (PackIconKind Icon, string Token) Style(DialogKind kind) => kind switch
+    private static (Wpf.Ui.Controls.SymbolRegular Icon, string Token) Style(DialogKind kind) => kind switch
     {
-        DialogKind.Success => (PackIconKind.CheckCircleOutline, "Ok"),
-        DialogKind.Warning => (PackIconKind.AlertOutline, "Warn"),
-        DialogKind.Error => (PackIconKind.AlertCircleOutline, "Danger"),
-        DialogKind.Question => (PackIconKind.HelpCircleOutline, "Warn"),
-        _ => (PackIconKind.InformationOutline, "Accent")
+        DialogKind.Success => (Wpf.Ui.Controls.SymbolRegular.CheckmarkCircle24, "Ok"),
+        DialogKind.Warning => (Wpf.Ui.Controls.SymbolRegular.Warning24, "Warn"),
+        DialogKind.Error => (Wpf.Ui.Controls.SymbolRegular.ErrorCircle24, "Danger"),
+        DialogKind.Question => (Wpf.Ui.Controls.SymbolRegular.QuestionCircle24, "Warn"),
+        _ => (Wpf.Ui.Controls.SymbolRegular.Info24, "Accent")
     };
 
     private static Brush Brush(string token) => Application.Current?.TryFindResource(token) as Brush;
