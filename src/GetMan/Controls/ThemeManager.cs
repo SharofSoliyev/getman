@@ -47,6 +47,7 @@ public static class ThemeManager
         }
 
         ApplyMaterialPalette(theme);
+        ApplyFluentAccent(theme);
 
         Current = theme;
         ThemePalette.Refresh();
@@ -70,6 +71,50 @@ public static class ThemeManager
         {
             // A palette failure must not take the window down; tokens already switched.
         }
+    }
+
+    /// <summary>
+    /// WPF-UI writes its accent brushes straight into Application.Resources when it loads, and a
+    /// value set there beats anything a merged dictionary says - which is why the rest of the
+    /// Fluent bridge in Tokens.*.xaml takes but the accent alone stayed salmon. These are written
+    /// the same way, after the swap, so the last word is ours.
+    /// </summary>
+    private static void ApplyFluentAccent(AppTheme theme)
+    {
+        var app = Application.Current;
+        if (app == null) return;
+
+        // Green is the action colour, so it is what Fluent fills a checked control with; sky
+        // stays selection, links and anything Fluent calls "accent text".
+        var action = Color(theme == AppTheme.Dark ? "#FF22C55E" : "#FF16A34A");
+        var actionHover = Color(theme == AppTheme.Dark ? "#FF16A34A" : "#FF15803D");
+        var accent = Color(theme == AppTheme.Dark ? "#FF38BDF8" : "#FF0284C7");
+        var onAction = Color(theme == AppTheme.Dark ? "#FF052E16" : "#FFFFFFFF");
+
+        foreach (var (key, colour) in new (string, Color)[]
+                 {
+                     ("SystemAccentColor", action),
+                     ("SystemAccentColorPrimary", action),
+                     ("SystemAccentColorSecondary", actionHover),
+                     ("SystemAccentColorTertiary", actionHover),
+                 })
+            app.Resources[key] = colour;
+
+        foreach (var (key, colour) in new (string, Color)[]
+                 {
+                     ("SystemAccentColorPrimaryBrush", action),
+                     ("SystemAccentColorSecondaryBrush", actionHover),
+                     ("SystemAccentColorTertiaryBrush", actionHover),
+                     ("AccentFillColorDefaultBrush", action),
+                     ("AccentFillColorSecondaryBrush", actionHover),
+                     ("AccentFillColorTertiaryBrush", actionHover),
+                     ("AccentTextFillColorPrimaryBrush", accent),
+                     ("AccentTextFillColorSecondaryBrush", accent),
+                     ("TextOnAccentFillColorPrimaryBrush", onAction),
+                     ("TextOnAccentFillColorSecondaryBrush", onAction),
+                     ("FocusStrokeColorOuterBrush", accent),
+                 })
+            app.Resources[key] = new SolidColorBrush(colour);
     }
 
     private static Color Color(string hex) => (Color)ColorConverter.ConvertFromString(hex);
