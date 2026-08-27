@@ -32,7 +32,7 @@
                 <DataGridTemplateColumn.CellTemplate>
                     <DataTemplate>
                         <TextBox Text="{Binding Key, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource FlatTextBox}" FontFamily="{StaticResource MonoFont}" FontSize="12" />
+                                 Style="{StaticResource GridCellTextBox}" FontFamily="{StaticResource MonoFont}" FontSize="12" />
                     </DataTemplate>
                 </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>
@@ -52,7 +52,7 @@
                     <DataTemplate>
                         <Grid>
                             <TextBox x:Name="ValueBox" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource FlatTextBox}" FontFamily="{StaticResource MonoFont}" FontSize="12" />
+                                     Style="{StaticResource GridCellTextBox}" FontFamily="{StaticResource MonoFont}" FontSize="12" />
                             <Grid x:Name="FilePart" Visibility="Collapsed">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -84,7 +84,7 @@
                 <DataGridTemplateColumn.CellTemplate>
                     <DataTemplate>
                         <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource FlatTextBox}" FontSize="12" Foreground="{DynamicResource FgDim}" />
+                                 Style="{StaticResource GridCellTextBox}" FontSize="12" Foreground="{DynamicResource FgDim}" />
                     </DataTemplate>
                 </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>

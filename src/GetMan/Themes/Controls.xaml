@@ -940,6 +940,64 @@
         Only colour changes on hover. Growing the thumb would reflow the content beside it, which
         is the hover-shift the design rules warn about.
     -->
+    <!-- ========================================== editable grid cell ==== -->
+    <!--
+        A key/value cell that says it can be typed into before it is touched. FlatTextBox alone
+        has no resting state at all, so an empty row is a blank strip: nothing marks where the
+        field starts, ends, or whether it is a field.
+
+        A hairline under the text rather than a box around it - one border per cell in a dense
+        grid turns the table into a cage, and the underline still gives the edges and the target.
+        It brightens on hover and turns accent on focus, so the three states read apart.
+    -->
+    <Style x:Key="GridCellTextBox" TargetType="TextBox" BasedOn="{StaticResource FlatTextBox}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Grid>
+                        <Border x:Name="glow" CornerRadius="5" Background="{DynamicResource Bg3}" Opacity="0" />
+                        <Border x:Name="rule" CornerRadius="5"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{DynamicResource BorderBrushSoft}"
+                                BorderThickness="0,0,0,1">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" Focusable="False"
+                                          VerticalAlignment="Center"
+                                          HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden" />
+                        </Border>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="rule" Property="BorderBrush" Value="{DynamicResource BorderBrushMain}" />
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="glow" Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="{StaticResource DurFast}"
+                                                         EasingFunction="{StaticResource EaseOut}" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="glow" Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="{StaticResource DurSlow}"
+                                                         EasingFunction="{StaticResource EaseOut}" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="rule" Property="BorderBrush" Value="{DynamicResource Accent}" />
+                            <Setter TargetName="rule" Property="BorderThickness" Value="0,0,0,1.6" />
+                            <Setter TargetName="glow" Property="Opacity" Value="1" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="ScrollThumb" TargetType="Thumb">
         <Setter Property="OverridesDefaultStyle" Value="True" />
         <Setter Property="IsTabStop" Value="False" />
