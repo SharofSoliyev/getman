@@ -25,6 +25,8 @@
 dotnet run --project src/GetMan            # запуск из исходников
 dotnet publish src/GetMan -c Release -r win-x64 --self-contained true \
   -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o dist        # один файл GetMan.exe
+dotnet publish src/GetMan.Cli -c Release -r win-x64 --self-contained true \
+  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o dist-cli    # консольный getman.exe
 ```
 
 Рабочее пространство хранится в `%APPDATA%\GetMan\workspace.json` (с резервной копией), отдельно у
@@ -152,6 +154,9 @@ token), Digest (ответ на challenge с MD5, MD5-sess, SHA-256), NTLM, AWS 
 CSV- или JSON-файла, останавливайтесь на первом провале, учитывайте `setNextRequest` и следите за
 результатами тестов по каждому запросу вживую.
 
+**Командная строка** — тот же раннер без окна, для CI. См.
+[Запуск коллекций из командной строки](#запуск-коллекций-из-командной-строки).
+
 **Языки интерфейса** — английский, русский и узбекский, переключаются на лету из верхней панели.
 См. [Языки интерфейса](#языки-интерфейса).
 
@@ -163,6 +168,58 @@ CSV- или JSON-файла, останавливайтесь на первом 
 **Горячие клавиши** — `Ctrl+Enter` отправить · `Ctrl+S` сохранить · `Ctrl+N` новый запрос ·
 `Ctrl+W` закрыть вкладку · `Ctrl+O` импорт · `Ctrl+E` окружения · `Ctrl+R` раннер ·
 `Ctrl+Shift+D` светлая/тёмная тема · `F2` переименовать выбранный запрос, папку или коллекцию.
+
+## Запуск коллекций из командной строки
+
+`getman.exe` — второй, консольный исполняемый файл, который использует **тот же** движок, что и
+окно: тот же импортёр, резолвер переменных, подпись авторизации и среду скриптов Jint. Коллекция,
+которая проходит в приложении, проходит и здесь, и наоборот. Именно на него нацеливают задачу CI.
+
+```
+getman run api.postman_collection.json -e staging.postman_environment.json
+getman run api.json -d users.csv -n 50 --delay 200 --bail
+getman run api.json -r junit -o results/getman.xml
+```
+
+```
+  GetMan 1.0.0 - running "CLI demo"
+
+  ✓  GET    Echo GET   200 OK   630 ms   1.1 KB
+       ✓ Status code is 200
+       ✓ Echoes the who variable
+  ✗  GET    Deliberate failure   404 Not Found   185 ms   416 B
+       ✗ This one is meant to fail  expected response code to be 200 but got 404
+
+  3 request(s), 5 assertion(s), 4 passed, 1 failed
+  total 1.16 s
+```
+
+| Опция | Что делает |
+|---|---|
+| `-e, --environment <file>` | экспорт окружения Postman; повторяйте, чтобы слить слева направо |
+| `-g, --globals <file>` | экспорт глобальных переменных Postman |
+| `-d, --data <file>` | файл данных CSV или JSON, одна итерация на строку |
+| `-n, --iterations <n>` | число итераций (по умолчанию — число строк данных, иначе 1) |
+| `--delay <ms>` | пауза между запросами |
+| `--folder <name>` | запустить только эту папку коллекции |
+| `--var name=value` | задать переменную; приоритетнее файла окружения, повторяемо |
+| `--timeout <ms>` / `--script-timeout <ms>` | таймауты запроса и скрипта |
+| `--insecure` | не проверять TLS-сертификаты |
+| `--bail` | остановиться на первом упавшем запросе |
+| `-r, --reporter <cli\|json\|junit>` | формат вывода |
+| `-o, --output <file>` | записать отчёт в файл вместо stdout |
+| `--lang <en\|ru\|uz>` · `--no-color` | язык и вывод без цвета |
+
+**Коды выхода** — `0` все запросы ответили и все проверки прошли · `1` проверка не прошла либо
+запрос не получил ответа · `2` неверные аргументы или файлы. Больше задаче CI ничего не нужно, а
+`--reporter junit` даёт ей отчёт для отрисовки.
+
+Переменные, которые задаёт скрипт, переходят к следующему запросу точно так же, как в приложении:
+запрос логина, сохраняющий токен, и последующий запрос, который его тратит, работают без изменений.
+
+```yaml
+- run: getman run api.json -e ci.postman_environment.json --var token=${{ secrets.API_TOKEN }} -r junit -o report.xml
+```
 
 ## Дизайн-система
 

@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>GetMan.Cli</RootNamespace>
+    <AssemblyName>getman</AssemblyName>
+    <Version>1.0.0</Version>
+    <Product>GetMan CLI</Product>
+    <Description>Headless collection runner for GetMan</Description>
+    <LangVersion>latest</LangVersion>
+    <NoWarn>$(NoWarn);CS0618</NoWarn>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <InvariantGlobalization>true</InvariantGlobalization>
+
+    <!--
+      The engine is shared by source rather than by a project reference: GetMan.csproj is a WPF
+      WinExe, and referencing it would drag the whole UI (and a second Main) into a console tool.
+      Models and Services deliberately have no WPF dependency, which is what makes this work.
+    -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Exclude bin and obj by hand: turning off the default items also turns off their exclusion,
+         and a RID publish would otherwise compile the generated AssemblyInfo twice. -->
+    <Compile Include="**\*.cs" Exclude="bin\**\*.cs;obj\**\*.cs" />
+    <Compile Include="..\GetMan\Models\**\*.cs" LinkBase="Models" />
+    <Compile Include="..\GetMan\Services\**\*.cs" LinkBase="Services" />
+  </ItemGroup>
+
+  <!-- Same language tables as the app, so the reports can be translated. -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\GetMan\Assets\Lang\*.json" LogicalName="GetMan.Assets.Lang.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Jint" Version="4.4.0" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="System.Text.Json" Version="9.0.2" />
+  </ItemGroup>
+
+</Project>

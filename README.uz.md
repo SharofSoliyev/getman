@@ -25,6 +25,8 @@ bir zumda ochiladi va mavjud Postman kolleksiyalaringizni o'z holicha import qil
 dotnet run --project src/GetMan            # manbadan ishga tushirish
 dotnet publish src/GetMan -c Release -r win-x64 --self-contained true \
   -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o dist        # bitta faylli GetMan.exe
+dotnet publish src/GetMan.Cli -c Release -r win-x64 --self-contained true \
+  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o dist-cli    # konsolli getman.exe
 ```
 
 Ish maydoni `%APPDATA%\GetMan\workspace.json` faylida saqlanadi (zaxira nusxasi bilan), har bir
@@ -155,6 +157,10 @@ natijalari, konsol paneli va vaqt taqsimoti (DNS, TCP, TLS, birinchi baytgacha v
 JSON ma'lumot faylidan yuriting, birinchi muvaffaqiyatsizlikda to'xtang, `setNextRequest` ni hisobga
 oling va har bir so'rov test natijalarini jonli kuzating.
 
+**Buyruq satri** — oynasiz, o'sha runner, CI uchun.
+[Kolleksiyalarni buyruq satridan ishga tushirish](#kolleksiyalarni-buyruq-satridan-ishga-tushirish)
+ga qarang.
+
 **Interfeys tillari** — ingliz, rus va o'zbek, yuqoridagi paneldan jonli almashtiriladi.
 [Interfeys tillari](#interfeys-tillari) ga qarang.
 
@@ -167,6 +173,58 @@ o'z proksisi va mijoz sertifikatlari.
 `Ctrl+W` yorliqni yopish · `Ctrl+O` import · `Ctrl+E` muhitlar · `Ctrl+R` runner ·
 `Ctrl+Shift+D` yorug'/qorong'i mavzu · `F2` tanlangan so'rov, papka yoki kolleksiya nomini
 o'zgartirish.
+
+## Kolleksiyalarni buyruq satridan ishga tushirish
+
+`getman.exe` — ikkinchi, faqat konsolli fayl. U oynadagi bilan **bir xil** dvigatelni yuritadi: o'sha
+importer, o'zgaruvchilar yechimi, auth imzosi va Jint skript muhiti. Dasturda o'tgan kolleksiya bu
+yerda ham o'tadi, aksi ham to'g'ri. CI vazifasini aynan shunga qaratasiz.
+
+```
+getman run api.postman_collection.json -e staging.postman_environment.json
+getman run api.json -d users.csv -n 50 --delay 200 --bail
+getman run api.json -r junit -o results/getman.xml
+```
+
+```
+  GetMan 1.0.0 - running "CLI demo"
+
+  ✓  GET    Echo GET   200 OK   630 ms   1.1 KB
+       ✓ Status code is 200
+       ✓ Echoes the who variable
+  ✗  GET    Deliberate failure   404 Not Found   185 ms   416 B
+       ✗ This one is meant to fail  expected response code to be 200 but got 404
+
+  3 request(s), 5 assertion(s), 4 passed, 1 failed
+  total 1.16 s
+```
+
+| Parametr | Nima qiladi |
+|---|---|
+| `-e, --environment <file>` | Postman muhit eksporti; chapdan o'ngga birlashtirish uchun takrorlang |
+| `-g, --globals <file>` | Postman global o'zgaruvchilar eksporti |
+| `-d, --data <file>` | CSV yoki JSON ma'lumot fayli, har qator bitta takrorlash |
+| `-n, --iterations <n>` | takrorlashlar soni (sukut bo'yicha ma'lumot qatorlari soni, aks holda 1) |
+| `--delay <ms>` | so'rovlar orasidagi kutish |
+| `--folder <name>` | kolleksiyaning faqat shu papkasini ishga tushirish |
+| `--var name=value` | o'zgaruvchi berish; muhit faylidan ustun, takrorlanadi |
+| `--timeout <ms>` / `--script-timeout <ms>` | so'rov va skript taymautlari |
+| `--insecure` | TLS sertifikatlarini tekshirmaslik |
+| `--bail` | birinchi yiqilgan so'rovda to'xtash |
+| `-r, --reporter <cli\|json\|junit>` | chiqish formati |
+| `-o, --output <file>` | hisobotni stdout o'rniga faylga yozish |
+| `--lang <en\|ru\|uz>` · `--no-color` | til va rangsiz chiqish |
+
+**Chiqish kodlari** — `0` hamma so'rov javob berdi va hamma tekshiruv o'tdi · `1` tekshiruv o'tmadi
+yoki so'rov javob olmadi · `2` argumentlar yoki fayllar noto'g'ri. CI vazifasiga shundan ortig'i
+kerak emas, ustiga `--reporter junit` unga ko'rsatish uchun hisobot beradi.
+
+Skript o'rnatgan o'zgaruvchilar keyingi so'rovga xuddi dasturdagidek o'tadi: token saqlaydigan login
+so'rovi va uni ishlatadigan keyingi so'rov o'zgarishsiz ishlayveradi.
+
+```yaml
+- run: getman run api.json -e ci.postman_environment.json --var token=${{ secrets.API_TOKEN }} -r junit -o report.xml
+```
 
 ## Dizayn tizimi
 

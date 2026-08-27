@@ -59,6 +59,9 @@ public static class Program
         Section("cURL import");
         TestCurl();
 
+        Section("Data files (runner and CLI)");
+        TestDataFiles();
+
         Section("Request preparation");
         TestPreparation();
 
@@ -220,6 +223,51 @@ public static class Program
     }
 
     #region harness
+
+    /// <summary>
+    /// The runner window and the command line read iteration data through the same reader, so a
+    /// quoting bug here would silently change what every data-driven run sends.
+    /// </summary>
+    private static void TestDataFiles()
+    {
+        var cells = DataFile.SplitCsv("plain,\"quoted, with comma\",\"say \"\"hi\"\"\",  padded  ");
+        Check("csv splits on unquoted commas only", cells.Count == 4, $"got {cells.Count} cells");
+        Check("csv keeps a comma inside quotes", cells.Count > 1 && cells[1] == "quoted, with comma",
+            cells.Count > 1 ? cells[1] : "-");
+        Check("csv unescapes a doubled quote", cells.Count > 2 && cells[2] == "say \"hi\"",
+            cells.Count > 2 ? cells[2] : "-");
+        Check("csv trims surrounding space", cells.Count > 3 && cells[3] == "padded",
+            cells.Count > 3 ? cells[3] : "-");
+
+        var dir = Path.Combine(Path.GetTempPath(), "GetMan.DataFile");
+        Directory.CreateDirectory(dir);
+        try
+        {
+            var csv = Path.Combine(dir, "rows.csv");
+            File.WriteAllText(csv, "name,city\nАзиза,Toshkent\n\"Соliyev, S.\",Samarqand\n", new UTF8Encoding(false));
+            var rows = DataFile.Read(csv);
+            Check("csv reads one row per line, blank lines skipped", rows.Count == 2, $"got {rows.Count}");
+            Check("csv keeps Cyrillic intact", rows.Count > 0 && rows[0]["name"] == "Азиза",
+                rows.Count > 0 ? rows[0]["name"] : "-");
+            Check("csv row with a quoted comma stays one cell",
+                rows.Count > 1 && rows[1]["city"] == "Samarqand", rows.Count > 1 ? rows[1]["city"] : "-");
+
+            var json = Path.Combine(dir, "rows.json");
+            File.WriteAllText(json, "[{\"id\":7,\"name\":\"Azi\"},{\"id\":8,\"name\":\"Sha\"},\"skip me\"]");
+            var jsonRows = DataFile.Read(json);
+            Check("json array yields one row per object, non-objects ignored", jsonRows.Count == 2,
+                $"got {jsonRows.Count}");
+            Check("json numbers become strings", jsonRows.Count > 0 && jsonRows[0]["id"] == "7",
+                jsonRows.Count > 0 ? jsonRows[0]["id"] : "-");
+
+            File.WriteAllText(json, "{\"not\":\"an array\"}");
+            Check("json object at the root yields no rows", DataFile.Read(json).Count == 0);
+        }
+        finally
+        {
+            try { Directory.Delete(dir, true); } catch { }
+        }
+    }
 
     private static void Section(string name)
     {

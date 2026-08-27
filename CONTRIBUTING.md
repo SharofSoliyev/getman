@@ -14,24 +14,43 @@ dotnet build GetMan.sln -c Release
 dotnet run  --project src/GetMan
 ```
 
-To produce the single-file executable:
+To produce the single-file executables:
 
 ```
-dotnet publish src/GetMan -c Release -r win-x64 --self-contained true \
+dotnet publish src/GetMan     -c Release -r win-x64 --self-contained true \
   -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o dist
+dotnet publish src/GetMan.Cli -c Release -r win-x64 --self-contained true \
+  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o dist-cli
 ```
+
+The solution holds three projects: the WPF app, the console runner (`src/GetMan.Cli`, which shares
+`Models/` and `Services/` **by source**, because referencing a WPF `WinExe` would pull the whole
+interface into a console tool) and the headless test suite.
+
+That arrangement only works while the model and service layers stay free of WPF. If you add a
+`using System.Windows…` to anything under `Models/` or `Services/`, the CLI and the tests stop
+compiling — which is the point. Put the WPF-facing part in `Controls/`, the way
+`Controls/LocExtension.cs` holds the `{loc:T …}` markup extension while the string table itself
+lives in `Services/Localization.cs`.
 
 ## Before you open a pull request
 
-Two suites have to pass. Both are fast and neither needs a fixture server beyond `postman-echo.com`.
+Three checks have to pass. All are fast, and only the online half of the first needs a network.
 
 ```
-dotnet run --project tools/SelfTest -- --offline    # 165 assertions over the service layer
+dotnet build GetMan.sln -c Release
+
+dotnet run --project tools/SelfTest -- --offline    # 175 assertions over the service layer
 dotnet run --project tools/SelfTest                 # the same plus live HTTP
 
-dotnet build GetMan.sln -c Release
 src/GetMan/bin/Release/net9.0-windows/GetMan.exe --self-check
+
+src/GetMan.Cli/bin/Release/net9.0-windows/getman.exe \
+  run tools/fixtures/offline-smoke.postman_collection.json -r junit -o cli.xml   # must exit 1
 ```
+
+The CLI fixture points at a closed local port, so it exercises import, run, report and the exit code
+without needing anything to answer.
 
 `--self-check` builds every window, verifies the language tables, and then drives the interaction
 flows a user actually performs — rename focus, creating folders and requests, search filtering,

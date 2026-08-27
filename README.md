@@ -25,6 +25,8 @@ imports your existing Postman collections as-is.
 dotnet run --project src/GetMan            # run from source
 dotnet publish src/GetMan -c Release -r win-x64 --self-contained true \
   -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o dist        # single-file GetMan.exe
+dotnet publish src/GetMan.Cli -c Release -r win-x64 --self-contained true \
+  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o dist-cli    # console getman.exe
 ```
 
 Workspace data lives in `%APPDATA%\GetMan\workspace.json` (with a rolling backup), one file per
@@ -149,6 +151,9 @@ pane, and a timing breakdown (DNS, TCP, TLS, time-to-first-byte, download, total
 **Collection runner** — pick requests, set iterations and delay, drive it from a CSV or JSON data
 file, stop on failure, honour `setNextRequest`, and watch per-request test results live.
 
+**Command line** — the same runner without the window, for CI. See
+[Running collections from the command line](#running-collections-from-the-command-line).
+
 **Interface languages** — English, Russian and Uzbek, switched live from the app bar. See
 [Interface languages](#interface-languages).
 
@@ -160,6 +165,58 @@ proxy, and client certificates.
 **Shortcuts** — `Ctrl+Enter` send · `Ctrl+S` save · `Ctrl+N` new request · `Ctrl+W` close tab ·
 `Ctrl+O` import · `Ctrl+E` environments · `Ctrl+R` runner · `Ctrl+Shift+D` light/dark · `F2` rename
 the selected request, folder or collection.
+
+## Running collections from the command line
+
+`getman.exe` is a second, console-only executable that drives the **same** engine as the window —
+the same importer, variable resolver, auth signing and Jint script runtime. A collection that
+passes in the app passes here, and the other way round. It is the piece you point a CI job at.
+
+```
+getman run api.postman_collection.json -e staging.postman_environment.json
+getman run api.json -d users.csv -n 50 --delay 200 --bail
+getman run api.json -r junit -o results/getman.xml
+```
+
+```
+  GetMan 1.0.0 - running "CLI demo"
+
+  ✓  GET    Echo GET   200 OK   630 ms   1.1 KB
+       ✓ Status code is 200
+       ✓ Echoes the who variable
+  ✗  GET    Deliberate failure   404 Not Found   185 ms   416 B
+       ✗ This one is meant to fail  expected response code to be 200 but got 404
+
+  3 request(s), 5 assertion(s), 4 passed, 1 failed
+  total 1.16 s
+```
+
+| Option | What it does |
+|---|---|
+| `-e, --environment <file>` | Postman environment export; repeat to merge, left to right |
+| `-g, --globals <file>` | Postman globals export |
+| `-d, --data <file>` | CSV or JSON data file, one iteration per row |
+| `-n, --iterations <n>` | iteration count (default: the data row count, else 1) |
+| `--delay <ms>` | wait between requests |
+| `--folder <name>` | run only this folder of the collection |
+| `--var name=value` | set a variable; wins over the environment file, repeatable |
+| `--timeout <ms>` / `--script-timeout <ms>` | per-request and per-script timeouts |
+| `--insecure` | do not verify TLS certificates |
+| `--bail` | stop at the first failing request |
+| `-r, --reporter <cli\|json\|junit>` | output format |
+| `-o, --output <file>` | write the report to a file instead of stdout |
+| `--lang <en\|ru\|uz>` · `--no-color` | language and plain output |
+
+**Exit codes** — `0` everything answered and every assertion passed · `1` an assertion failed or a
+request never got a response · `2` the arguments or the files were wrong. That is all a CI job
+needs; `--reporter junit` on top gives it a test report to render.
+
+Variables a script sets carry to the next request exactly as they do in the app, so a login request
+that stores a token and a later request that spends it work unchanged.
+
+```yaml
+- run: getman run api.json -e ci.postman_environment.json --var token=${{ secrets.API_TOKEN }} -r junit -o report.xml
+```
 
 ## Design system
 
@@ -239,8 +296,15 @@ src/GetMan/
   Views/         request/response editors and the dialog windows
   Controls/      AvalonEdit host, key-value grid, converters
   Themes/        dark colour and control styles
+src/GetMan.Cli/   console runner: argument parsing, reporters (cli, json, junit)
 tools/SelfTest/  headless test suite over the whole service layer
+tools/fixtures/  collections the tests and CI run against
 ```
+
+`src/GetMan.Cli` shares `Models/` and `Services/` by source rather than by a project reference:
+`GetMan.csproj` is a WPF `WinExe`, and referencing it would pull the entire interface — and a second
+`Main` — into a console tool. That only works because the model and service layers have no WPF
+dependency, which the CLI build now enforces.
 
 ## Tests
 
@@ -255,6 +319,11 @@ GetMan.exe --self-check                                  # builds every window, 
                                                          # search, drag, tabs, theme) in a sandbox
 GetMan.exe --render auth shot.png [light]                # render one view off-screen for design review
 GetMan.exe --shots docs/images                           # regenerate every documentation screenshot
+
+getman run tools/fixtures/offline-smoke.postman_collection.json -r junit -o cli.xml
+                                                         # end-to-end CLI check; the fixture points
+                                                         # at a closed port, so it needs no network
+                                                         # and must exit 1
 powershell -File tools/capture.ps1 -Out shot.png         # screenshot the running app
 powershell -File tools/capture.ps1 -HoverX 115 -HoverY 244  # ...with the pointer parked to show hover
 ```

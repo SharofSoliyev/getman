@@ -29,14 +29,36 @@ jobs:
       - name: Window and interaction self-check
         run: src/GetMan/bin/Release/net9.0-windows/GetMan.exe --self-check
 
+      # The fixture points at a closed local port, so this exercises import, run, report and the
+      # exit code without needing anything to answer.
+      - name: CLI smoke test
+        run: |
+          $cli = "src/GetMan.Cli/bin/Release/net9.0-windows/getman.exe"
+          & $cli --version
+          if ($LASTEXITCODE -ne 0) { throw "getman --version exited $LASTEXITCODE" }
+
+          & $cli run tools/fixtures/offline-smoke.postman_collection.json -r junit -o cli-report.xml --no-color
+          if ($LASTEXITCODE -ne 1) { throw "expected exit 1 for the refused connection, got $LASTEXITCODE" }
+          if (-not (Test-Path cli-report.xml)) { throw "no JUnit report was written" }
+          if ((Get-Content cli-report.xml -Raw) -notmatch 'failures="1"') { throw "the JUnit report did not record the failure" }
+          Write-Host "CLI smoke test ok"
+
       - name: Publish single file
         run: >
           dotnet publish src/GetMan -c Release -r win-x64 --self-contained true
           -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true
           -o dist --nologo
 
+      - name: Publish the CLI
+        run: >
+          dotnet publish src/GetMan.Cli -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true
+          -o dist-cli --nologo
+
       - uses: actions/upload-artifact@v4
         with:
           name: GetMan-win-x64
-          path: dist/GetMan.exe
+          path: |
+            dist/GetMan.exe
+            dist-cli/getman.exe
           if-no-files-found: error

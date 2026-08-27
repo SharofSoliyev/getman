@@ -1,8 +1,6 @@
 using System.ComponentModel;
 using System.Reflection;
 using System.Text.Json;
-using System.Windows.Markup;
-using System.Windows.Data;
 
 namespace GetMan.Services;
 
@@ -109,21 +107,3 @@ public sealed class Loc : INotifyPropertyChanged
     }
 }
 
-/// <summary>XAML sugar: <c>Text="{loc:T App.New}"</c>.</summary>
-public sealed class TExtension : MarkupExtension
-{
-    public TExtension() { }
-    public TExtension(string key) => Key = key;
-
-    public string Key { get; set; }
-
-    public override object ProvideValue(IServiceProvider serviceProvider)
-    {
-        var binding = new Binding($"[{Key}]")
-        {
-            Source = Loc.Instance,
-            Mode = BindingMode.OneWay
-        };
-        return binding.ProvideValue(serviceProvider);
-    }
-}

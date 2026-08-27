@@ -15,8 +15,6 @@
     <Compile Include="Program.cs" />
     <Compile Include="..\..\src\GetMan\Models\**\*.cs" LinkBase="Models" />
     <Compile Include="..\..\src\GetMan\Services\**\*.cs" LinkBase="Services" />
-    <!-- Localization.cs is XAML plumbing (MarkupExtension, Binding); these tests run without WPF. -->
-    <Compile Remove="..\..\src\GetMan\Services\Localization.cs" />
   </ItemGroup>
 
   <ItemGroup>
