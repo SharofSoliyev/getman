@@ -6,7 +6,6 @@
         xmlns:ctl="clr-namespace:GetMan.Controls"
         xmlns:models="clr-namespace:GetMan.Models"
         xmlns:views="clr-namespace:GetMan.Views"
-        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         Title="GetMan" Height="880" Width="1480" MinWidth="980" MinHeight="600"
         Background="{DynamicResource Bg1}" Foreground="{DynamicResource Fg}"
@@ -95,8 +94,8 @@
         </Grid.RowDefinitions>
 
         <!-- ================================================= app bar ==== -->
-        <materialDesign:ColorZone Grid.Row="0" Mode="Standard" Background="{DynamicResource Bg2}"
-                                  materialDesign:ElevationAssist.Elevation="Dp3" Padding="14,0" Height="52"
+        <Border Grid.Row="0" Background="{DynamicResource Bg2}"
+ Padding="14,0" Height="52"
                                   Panel.ZIndex="2">
             <!-- The two ends carry controls, so they opt out of the drag region; the gap between
                  them stays draggable, which is what makes the bar behave like a title bar. -->
@@ -256,7 +255,7 @@
                     </StackPanel>
                 </StackPanel>
             </DockPanel>
-        </materialDesign:ColorZone>
+        </Border>
 
         <!-- ==================================================== body ==== -->
         <Grid Grid.Row="1">

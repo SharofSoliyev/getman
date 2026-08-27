@@ -1,6 +1,5 @@
 using System.Windows;
 using System.Windows.Media;
-using MaterialDesignThemes.Wpf;
 
 namespace GetMan.Controls;
 
@@ -10,7 +9,7 @@ public enum AppTheme
     Light
 }
 
-/// <summary>Swaps the token dictionary and the Material palette at run time.</summary>
+/// <summary>Swaps the token dictionary and the Fluent accent at run time.</summary>
 public static class ThemeManager
 {
     private const string DarkTokens = "Themes/Tokens.Dark.xaml";
@@ -46,7 +45,6 @@ public static class ThemeManager
             dictionaries.Insert(0, replacement);
         }
 
-        ApplyMaterialPalette(theme);
         ApplyFluentAccent(theme);
 
         Current = theme;
@@ -55,23 +53,6 @@ public static class ThemeManager
     }
 
     public static void Toggle() => Apply(Current == AppTheme.Dark ? AppTheme.Light : AppTheme.Dark);
-
-    private static void ApplyMaterialPalette(AppTheme theme)
-    {
-        try
-        {
-            var helper = new PaletteHelper();
-            var materialTheme = helper.GetTheme();
-            materialTheme.SetBaseTheme(theme == AppTheme.Dark ? BaseTheme.Dark : BaseTheme.Light);
-            materialTheme.SetPrimaryColor(Color(theme == AppTheme.Dark ? "#FF22C55E" : "#FF16A34A"));
-            materialTheme.SetSecondaryColor(Color(theme == AppTheme.Dark ? "#FF38BDF8" : "#FF0284C7"));
-            helper.SetTheme(materialTheme);
-        }
-        catch
-        {
-            // A palette failure must not take the window down; tokens already switched.
-        }
-    }
 
     /// <summary>
     /// WPF-UI writes its accent brushes straight into Application.Resources when it loads, and a

@@ -4,7 +4,6 @@
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:loc="clr-namespace:GetMan.Services"
         xmlns:ctl="clr-namespace:GetMan.Controls"
-        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="Import from Postman" Height="660" Width="960"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
     <Grid>
@@ -15,8 +14,8 @@
         </Grid.RowDefinitions>
 
         <!-- detection banner -->
-        <materialDesign:ColorZone Grid.Row="0" Mode="Standard" Background="{DynamicResource Bg2}" Padding="18,14"
-                                  materialDesign:ElevationAssist.Elevation="Dp2">
+        <Border Grid.Row="0" Background="{DynamicResource Bg2}" Padding="18,14"
+>
             <StackPanel Orientation="Horizontal">
                 <ui:SymbolIcon x:Name="StatusIcon" Symbol="Rocket24" FontSize="26"
                                          VerticalAlignment="Center" Foreground="{DynamicResource Accent}" />
@@ -25,7 +24,7 @@
                     <TextBlock x:Name="StatusDetail" Style="{StaticResource Caption}" Margin="0,3,0,0" />
                 </StackPanel>
             </StackPanel>
-        </materialDesign:ColorZone>
+        </Border>
 
         <TabControl Grid.Row="1" Style="{StaticResource SubTabControl}" Margin="0,4,0,0">
             <!-- ============================================ local files ==== -->
