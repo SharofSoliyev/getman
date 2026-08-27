@@ -27,9 +27,11 @@
 ```
 dotnet run --project src/GetMan            # запуск из исходников
 dotnet publish src/GetMan -c Release -r win-x64 --self-contained true \
-  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o dist        # один файл GetMan.exe
+  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true \
+  -p:IncludeNativeLibrariesForSelfExtract=true -o dist        # один файл GetMan.exe
 dotnet publish src/GetMan.Cli -c Release -r win-x64 --self-contained true \
-  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o dist-cli    # консольный getman.exe
+  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true \
+  -p:IncludeNativeLibrariesForSelfExtract=true -o dist-cli    # консольный getman.exe
 ```
 
 Рабочее пространство хранится в `%APPDATA%\GetMan\workspace.json` (с резервной копией), отдельно у

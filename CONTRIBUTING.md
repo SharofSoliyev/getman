@@ -18,9 +18,11 @@ To produce the single-file executables:
 
 ```
 dotnet publish src/GetMan     -c Release -r win-x64 --self-contained true \
-  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o dist
+  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true \
+  -p:IncludeNativeLibrariesForSelfExtract=true -o dist
 dotnet publish src/GetMan.Cli -c Release -r win-x64 --self-contained true \
-  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o dist-cli
+  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true \
+  -p:IncludeNativeLibrariesForSelfExtract=true -o dist-cli
 ```
 
 The solution holds three projects: the WPF app, the console runner (`src/GetMan.Cli`, which shares

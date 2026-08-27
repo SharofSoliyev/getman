@@ -62,19 +62,44 @@ jobs:
         run: |
           $v = '${{ steps.version.outputs.version }}'
 
+          # IncludeNativeLibrariesForSelfExtract is what makes "single file" true for WPF.
+          # Without it the publish leaves wpfgfx_cor3.dll and four more beside the exe, and an
+          # exe shipped on its own dies with a DllNotFoundException on the first window.
           dotnet publish src/GetMan -c Release -r win-x64 --self-contained true `
-            -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:Version=$v `
+            -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true -p:Version=$v `
             -o publish/app --nologo
           if ($LASTEXITCODE -ne 0) { throw "publishing the app failed" }
 
           dotnet publish src/GetMan.Cli -c Release -r win-x64 --self-contained true `
-            -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:Version=$v `
+            -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true -p:Version=$v `
             -o publish/cli --nologo
           if ($LASTEXITCODE -ne 0) { throw "publishing the CLI failed" }
 
+          # Nothing but the executable may be needed at run time. A loose native library here is
+          # a broken download that still passes every test run from the publish folder.
+          foreach ($dir in 'publish/app', 'publish/cli') {
+            $stray = @(Get-ChildItem $dir -File | Where-Object { $_.Extension -notin '.exe', '.pdb' })
+            if ($stray.Count) { throw "$dir has files the release would leave behind: $($stray.Name -join ', ')" }
+          }
+
           New-Item -ItemType Directory -Force release | Out-Null
+
+          # The two names have to differ by more than case. Windows paths are case-insensitive,
+          # so GetMan-x.exe and getman-x.exe are one file and the second copy silently replaces
+          # the first - which is exactly what happened the first time this ran.
           Copy-Item publish/app/GetMan.exe "release/GetMan-$v-win-x64.exe"
-          Copy-Item publish/cli/getman.exe "release/getman-$v-win-x64.exe"
+          Copy-Item publish/cli/getman.exe "release/getman-cli-$v-win-x64.exe"
+
+          $exes = @(Get-ChildItem release -Filter *.exe)
+          if ($exes.Count -ne 2) {
+            throw "expected 2 executables, found $($exes.Count): $($exes.Name -join ', ')"
+          }
+          if (($exes | Get-FileHash -Algorithm SHA256 | Select-Object -Unique Hash).Count -ne 2) {
+            throw "the two assets are the same binary"
+          }
+
           Get-ChildItem release | Format-Table Name, Length
           exit 0
 
@@ -84,15 +109,29 @@ jobs:
         run: |
           $v = '${{ steps.version.outputs.version }}'
 
-          $reported = (& "release/getman-$v-win-x64.exe" --version) -join ''
+          # Run each asset from an empty folder, which is the situation a download lands in.
+          # Testing them where they were built hides anything they still need beside them.
+          $sandbox = Join-Path $env:RUNNER_TEMP 'asset-check'
+          Remove-Item $sandbox -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force $sandbox | Out-Null
+          Copy-Item "release/GetMan-$v-win-x64.exe"     $sandbox
+          Copy-Item "release/getman-cli-$v-win-x64.exe" $sandbox
+
+          $app = Join-Path $sandbox "GetMan-$v-win-x64.exe"
+          $cli = Join-Path $sandbox "getman-cli-$v-win-x64.exe"
+
+          $reported = (& $cli --version) -join ''
           if ($reported.Trim() -ne "GetMan $v") {
             throw "the published CLI reports '$reported', expected 'GetMan $v'"
           }
 
-          & "release/GetMan-$v-win-x64.exe" --self-check
-          if ($LASTEXITCODE -ne 0) { throw "the published app failed its self-check" }
+          # Start-Process, not the call operator: GetMan.exe is a GUI subsystem binary, so
+          # PowerShell does not wait for it and leaves $LASTEXITCODE untouched. The check would
+          # pass in milliseconds without the app having run at all.
+          $run = Start-Process -FilePath $app -ArgumentList '--self-check' -Wait -PassThru -NoNewWindow
+          if ($run.ExitCode -ne 0) { throw "the published app failed its self-check (exit $($run.ExitCode))" }
 
-          Write-Host "published binaries look right"
+          Write-Host "published binaries run from an empty folder"
           exit 0
 
       - name: Checksums

@@ -27,9 +27,11 @@ imports your existing Postman collections as-is.
 ```
 dotnet run --project src/GetMan            # run from source
 dotnet publish src/GetMan -c Release -r win-x64 --self-contained true \
-  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o dist        # single-file GetMan.exe
+  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true \
+  -p:IncludeNativeLibrariesForSelfExtract=true -o dist        # single-file GetMan.exe
 dotnet publish src/GetMan.Cli -c Release -r win-x64 --self-contained true \
-  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o dist-cli    # console getman.exe
+  -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true \
+  -p:IncludeNativeLibrariesForSelfExtract=true -o dist-cli    # console getman.exe
 ```
 
 Workspace data lives in `%APPDATA%\GetMan\workspace.json` (with a rolling backup), one file per
