@@ -12,6 +12,7 @@
 [English](README.md) · [Русский](README.ru.md) · **O'zbekcha**
 
 **[Oxirgi relizni yuklab olish](https://github.com/SharofSoliyev/getman/releases/latest)** — mustaqil ishlaydigan fayllar, o'rnatuvchi ham, alohida runtime ham kerak emas.
+Birinchi ishga tushirishda Windows ogohlantiradi — [nega va nima qilish kerak](#windows-protected-your-pc).
 
 <img src="docs/images/main-uz.png" alt="GetMan postman-echo'ga so'rov yubormoqda: javob tanasi, testlar va vaqtlar" width="900">
 
@@ -19,8 +20,7 @@
 
 ---
 
-**WPF va .NET 9** asosida yozilgan, **MaterialDesignInXamlToolkit** (Material Design 3) bilan
-bezatilgan. Electron yo'q, Chromium yo'q, fonda ishlaydigan node jarayoni yo'q: bitta nativ `.exe`
+**WPF va .NET 9** asosida yozilgan, **WPF-UI** (Fluent 2) bilan bezatilgan. Electron yo'q, Chromium yo'q, fonda ishlaydigan node jarayoni yo'q: bitta nativ `.exe`
 bir zumda ochiladi va mavjud Postman kolleksiyalaringizni o'z holicha import qiladi.
 
 ```
@@ -53,6 +53,42 @@ alohida ish, shuning uchun bugungi rost javob — faqat Windows.
 tushirish uchun bor, CI esa asosan Linuxda ishlaydi. U ilova bilan faqat model va servis qatlamlarini
 baham ko'radi — WPF yo'q — va CI buni har commitda Ubuntu'da butun servis testlarini hamda runnerning
 o'zini **ishga tushirib** isbotlaydi, shunchaki kompilyatsiya qilib emas.
+
+## Windows'ga o'rnatish
+
+[Releases](https://github.com/SharofSoliyev/getman/releases/latest) sahifasidan
+`GetMan-<versiya>-win-x64.exe` faylini yuklab oling va ishga tushiring. O'rnatuvchi yo'q, ochib
+olish ham shart emas: bu bitta mustaqil bajariluvchi fayl, ish maydonini esa `%APPDATA%\GetMan`
+ichida saqlaydi.
+
+### "Windows protected your PC"
+
+Birinchi ishga tushirishda ko'k SmartScreen oynasi chiqadi va unda faqat **Don't run** tugmasi
+ko'rinadi. **More info**, so'ng **Run anyway** ni bosing. Windows javobni eslab qoladi, shuning
+uchun bu bir marta bo'ladi.
+
+Bu virus ogohlantirishi emas va fayl nima qilishi haqida hech narsa aytmaydi. SmartScreen ikki
+savol beradi — buni kim imzolagan va uni oldin necha kishi ishga tushirgan — imzolanmagan kichik
+loyiha fayli esa ikkalasiga ham javob bera olmaydi. Har qanday kichik loyihaning imzolanmagan
+yuklamasi aynan shu oynani oladi.
+
+Oyna hamma uchun yo'qolishi faqat bitta yo'l bilan bo'ladi: fayllar kod imzolash sertifikati bilan
+imzolansin. Bu esa build sozlamasi emas, doimiy xarajat: Azure Trusted Signing oyiga taxminan $10,
+odatiy OV sertifikat esa yiliga bir necha yuz dollar va apparat token talab qiladi. Hozircha
+imzo yo'qligining halol sababi shu. Imzolash qadami
+[release oqimida](.github/workflows/release.yml) allaqachon turibdi: repozitoriyda hisob maʼlumotlari
+bo'lmaguncha u o'tkazib yuboriladi va ular paydo bo'lishi bilan o'zi ishga tushadi — o'sha kuni hech
+narsani qayta yozish kerak bo'lmaydi.
+
+Shu paytgacha oynaga ishonish o'rniga yuklamani tekshiring. Har bir relizda `SHA256SUMS.txt` bor:
+
+```powershell
+Get-FileHash .\GetMan-1.1.0-win-x64.exe -Algorithm SHA256
+```
+
+Agar hash `SHA256SUMS.txt` dagi shu fayl satriga mos tushsa, bajariluvchi fayl GitHub Actions shu
+repozitoriydan yig'gan narsaning aynan o'zi — kodini o'qish mumkin bo'lgan build, logini ko'rish
+mumkin bo'lgan runner ustida. Bu SmartScreen oynasi bera oladigan kafolatdan kuchliroq.
 
 ## Interfeys tillari
 
@@ -296,8 +332,8 @@ so'rovi va uni ishlatadigan keyingi so'rov o'zgarishsiz ishlayveradi.
 
 ## Dizayn tizimi
 
-Interfeys Material Design 3 (MaterialDesignInXamlToolkit, MIT) ustiga qurilgan
-**dasturchi vositasi / IDE** dizayn tizimiga amal qiladi.
+Interfeys Fluent 2 (WPF-UI, MIT) ustiga qurilgan **dasturchi vositasi / IDE** dizayn
+tizimiga amal qiladi; Windows 11 da Mica foni ishlatiladi.
 
 **Rang.** Slanets fon va bir-birining ishini bajarmaydigan ikki urg'u: yashil — ishga tushirish
 harakati, osmon rangi — tanlov va fokus. Metod va holat ranglari buning ustida semantik bo'lib
@@ -419,8 +455,7 @@ Xavfsizlik muammolari uchun alohida yo'l bor: [SECURITY.md](SECURITY.md).
 [MIT](LICENSE) © GetMan ishtirokchilari.
 
 GetMan boshqalarning mehnati ustida turibdi:
-[MaterialDesignInXamlToolkit](https://github.com/MaterialDesignInXAML/MaterialDesignInXamlToolkit)
-(MIT), [AvalonEdit](https://github.com/icsharpcode/AvalonEdit) (MIT),
+[WPF-UI](https://github.com/lepoco/wpfui) (MIT), [AvalonEdit](https://github.com/icsharpcode/AvalonEdit) (MIT),
 [Jint](https://github.com/sebastienros/jint) (BSD-2-Clause),
 [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) (MIT),
 [YamlDotNet](https://github.com/aaubry/YamlDotNet) (MIT) va

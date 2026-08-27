@@ -81,6 +81,11 @@ jobs:
     needs: [verify, cli]
     runs-on: windows-latest
 
+    # Read into env because `if:` cannot see the secrets context. An empty value means the
+    # repository has no signing account configured and the release simply goes out unsigned.
+    env:
+      SIGNING_ENDPOINT: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -158,6 +163,42 @@ jobs:
           Get-ChildItem release | Format-Table Name, Length
           exit 0
 
+      # An unsigned download makes Windows show "Windows protected your PC" and hide the Run
+      # button behind "More info". Nothing in the build can talk SmartScreen out of that: it
+      # asks who signed the file, and an unsigned file has no answer. Azure Trusted Signing
+      # issues the certificate Microsoft's own reputation service recognises; without the
+      # secrets the step is skipped and the release ships unsigned, which is what the READMEs
+      # describe and what SHA256SUMS.txt is there for.
+      - name: Sign the Windows executables
+        if: env.SIGNING_ENDPOINT != ''
+        uses: azure/trusted-signing-action@v0.5
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
+          trusted-signing-account-name: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.AZURE_CERTIFICATE_PROFILE }}
+          files-folder: release
+          files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      # Signing rewrites the file, so this runs after it: the hashes in SHA256SUMS.txt and the
+      # binaries that were smoke-tested both have to be the ones people download.
+      - name: Report what the executables are signed with
+        run: |
+          foreach ($exe in Get-ChildItem release -Filter *.exe) {
+            $signature = Get-AuthenticodeSignature $exe.FullName
+            $subject = if ($signature.SignerCertificate) { $signature.SignerCertificate.Subject } else { '-' }
+            Write-Host ("{0}: {1} {2}" -f $exe.Name, $signature.Status, $subject)
+          }
+          if ('${{ env.SIGNING_ENDPOINT }}' -eq '') {
+            Write-Host 'No signing account configured; this release is unsigned and SmartScreen will warn on it.'
+          }
+          exit 0
+
       # The binaries about to be published are the ones tested, rather than an earlier build of
       # the same commit, and the version people will quote in a bug report is the tagged one.
       - name: Check the published binaries
@@ -213,6 +254,7 @@ jobs:
       - name: Create or update the release
         env:
           GH_TOKEN: ${{ github.token }}
+          ASSET_VERSION: ${{ steps.version.outputs.version }}
         run: |
           $tag = '${{ steps.version.outputs.tag }}'
           $assets = (Get-ChildItem release | ForEach-Object { $_.FullName })
@@ -227,7 +269,29 @@ jobs:
             exit 0
           }
 
-          $arguments = @($tag, '--title', "GetMan $tag", '--generate-notes')
+          # Everyone who downloads the Windows app meets SmartScreen, so the answer is in the
+          # release itself rather than only in the README. --generate-notes appends the commit
+          # list underneath this.
+          $signed = if ('${{ env.SIGNING_ENDPOINT }}' -ne '') {
+            'These binaries are signed. If Windows still warns, the download is not ours - check it against SHA256SUMS.txt.'
+          } else {
+            'These binaries are not signed, so Windows shows **"Windows protected your PC"**. Choose **More info -> Run anyway**, or verify the download first.'
+          }
+
+          @(
+            '### Windows SmartScreen'
+            ''
+            $signed
+            ''
+            'To check a download against `SHA256SUMS.txt`:'
+            ''
+            '```powershell'
+            "Get-FileHash .\GetMan-$($env:ASSET_VERSION)-win-x64.exe -Algorithm SHA256"
+            '```'
+            ''
+          ) | Set-Content release-notes.md -Encoding utf8
+
+          $arguments = @($tag, '--title', "GetMan $tag", '--notes-file', 'release-notes.md', '--generate-notes')
           if ('${{ steps.version.outputs.prerelease }}' -eq 'true') { $arguments += '--prerelease' }
 
           # A hand-run release has no tag yet, so gh makes one at the commit that was built.

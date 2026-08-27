@@ -13,6 +13,7 @@
 
 **[Download the latest release](https://github.com/SharofSoliyev/getman/releases/latest)** —
 self-contained executables, no installer and no runtime to fetch.
+Windows will warn on first run - [why, and what to do about it](#windows-protected-your-pc).
 
 <img src="docs/images/main-dark.png" alt="GetMan running a request against postman-echo, showing the response body, tests and timings" width="900">
 
@@ -20,7 +21,7 @@ self-contained executables, no installer and no runtime to fetch.
 
 ---
 
-Built with **WPF on .NET 9** and themed with **MaterialDesignInXamlToolkit** (Material Design 3).
+Built with **WPF on .NET 9** and themed with **WPF-UI** (Fluent 2).
 No Electron, no Chromium, no background node process: one native `.exe` that starts instantly and
 imports your existing Postman collections as-is.
 
@@ -53,6 +54,42 @@ The **command-line runner is cross-platform**, which is where it matters most: i
 collections in CI, and most CI runs on Linux. It shares the model and service layers with the app
 and nothing else — no WPF — and CI proves that by running the whole service suite and the runner
 itself on Ubuntu on every commit, not just compiling them.
+
+## Installing on Windows
+
+Download `GetMan-<version>-win-x64.exe` from
+[Releases](https://github.com/SharofSoliyev/getman/releases/latest) and run it. There is no
+installer and nothing to unpack: it is one self-contained executable, and it keeps your workspace
+in `%APPDATA%\GetMan`.
+
+### "Windows protected your PC"
+
+The first run shows a blue SmartScreen dialog whose only visible button is **Don't run**. Click
+**More info**, then **Run anyway**. Windows remembers the answer, so you see it once.
+
+It is not a virus warning, and it says nothing about what the file does. SmartScreen asks two
+questions — who signed this, and how many people have already run it — and an unsigned executable
+from a small project cannot answer either. Every unsigned download from every small project gets
+the same dialog.
+
+The dialog stops appearing for everyone only when the binaries carry a code-signing certificate,
+which is a recurring cost rather than a build setting: Azure Trusted Signing is about $10 a month,
+and a traditional OV certificate a few hundred dollars a year with a hardware token. That is the
+honest reason it has not happened yet. The signing step is already in
+[the release workflow](.github/workflows/release.yml); it stays skipped until the repository is
+given the account secrets and turns itself on the moment it has them, so no release needs
+rewriting when that day comes.
+
+Until then, check the download instead of trusting the dialog. Every release ships
+`SHA256SUMS.txt`:
+
+```powershell
+Get-FileHash .\GetMan-1.1.0-win-x64.exe -Algorithm SHA256
+```
+
+If the hash matches the line for that file in `SHA256SUMS.txt`, the executable is byte-for-byte
+what GitHub Actions built from this repository — a build you can read, on a runner you can see the
+log of. That is a stronger guarantee than the SmartScreen dialog would ever have given you.
 
 ## Interface languages
 
@@ -299,8 +336,8 @@ that stores a token and a later request that spends it work unchanged.
 
 ## Design system
 
-The interface follows a **Developer Tool / IDE** design system on top of Material Design 3
-(MaterialDesignInXamlToolkit, MIT).
+The interface follows a **Developer Tool / IDE** design system on top of Fluent 2
+(WPF-UI, MIT), with a Mica backdrop on Windows 11.
 
 **Colour.** A slate canvas with two accents that never do each other's job — green is the run
 action, sky is selection and focus. Method and status colours stay semantic on top of that.
@@ -429,8 +466,7 @@ pass, and how to add or correct a language. Everyone taking part is expected to 
 [MIT](LICENSE) © GetMan contributors.
 
 GetMan stands on other people's work:
-[MaterialDesignInXamlToolkit](https://github.com/MaterialDesignInXAML/MaterialDesignInXamlToolkit)
-(MIT), [AvalonEdit](https://github.com/icsharpcode/AvalonEdit) (MIT),
+[WPF-UI](https://github.com/lepoco/wpfui) (MIT), [AvalonEdit](https://github.com/icsharpcode/AvalonEdit) (MIT),
 [Jint](https://github.com/sebastienros/jint) (BSD-2-Clause),
 [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) (MIT),
 [YamlDotNet](https://github.com/aaubry/YamlDotNet) (MIT) and
