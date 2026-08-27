@@ -38,21 +38,21 @@
     </Style>
 
     <!-- ================================================ typography ==== -->
-    <Style TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignTextBlock}">
+    <Style TargetType="TextBlock">
         <Setter Property="Foreground" Value="{DynamicResource Fg}" />
         <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <Style x:Key="Caption" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignTextBlock}">
+    <Style x:Key="Caption" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{DynamicResource FgDim}" />
         <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
         <Setter Property="FontSize" Value="11.5" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <Style x:Key="SectionLabel" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignOverlineTextBlock}">
+    <Style x:Key="SectionLabel" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{DynamicResource FgMuted}" />
         <Setter Property="FontFamily" Value="{DynamicResource UiFontMedium}" />
         <Setter Property="FontSize" Value="10" />
@@ -60,19 +60,19 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <Style x:Key="TitleText" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignTitleMediumTextBlock}">
+    <Style x:Key="TitleText" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{DynamicResource Fg}" />
         <Setter Property="FontFamily" Value="{DynamicResource UiFontMedium}" />
     </Style>
 
-    <Style x:Key="MonoText" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignTextBlock}">
+    <Style x:Key="MonoText" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Foreground" Value="{DynamicResource Fg}" />
     </Style>
 
     <!-- =================================================== buttons ==== -->
-    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+    <Style TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
         <Setter Property="Height" Value="32" />
         <Setter Property="MinWidth" Value="0" />
         <Setter Property="Padding" Value="14,0" />
@@ -92,7 +92,7 @@
         </Style.Triggers>
     </Style>
 
-    <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+    <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
         <Setter Property="Height" Value="32" />
         <Setter Property="MinWidth" Value="0" />
         <Setter Property="Padding" Value="16,0" />
@@ -112,7 +112,7 @@
         </Style.Triggers>
     </Style>
 
-    <Style x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+    <Style x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
         <Setter Property="Height" Value="32" />
         <Setter Property="MinWidth" Value="0" />
         <Setter Property="Padding" Value="10,0" />
@@ -130,7 +130,7 @@
         </Style.Triggers>
     </Style>
 
-    <Style x:Key="LinkButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+    <Style x:Key="LinkButton" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
         <Setter Property="Height" Value="26" />
         <Setter Property="MinWidth" Value="0" />
         <Setter Property="Padding" Value="8,0" />
@@ -144,7 +144,7 @@
         <Setter Property="FocusVisualStyle" Value="{StaticResource RingFocus}" />
     </Style>
 
-    <Style x:Key="IconBtn" TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
+    <Style x:Key="IconBtn" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
         <Setter Property="Width" Value="30" />
         <Setter Property="Height" Value="30" />
         <Setter Property="Foreground" Value="{DynamicResource FgDim}" />
@@ -159,7 +159,7 @@
         </Style.Triggers>
     </Style>
 
-    <Style x:Key="TinyIconBtn" TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
+    <Style x:Key="TinyIconBtn" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
         <Setter Property="Width" Value="22" />
         <Setter Property="Height" Value="22" />
         <Setter Property="Padding" Value="0" />
@@ -175,7 +175,7 @@
     </Style>
 
     <!-- ================================================ text input ==== -->
-    <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
+    <Style TargetType="TextBox" BasedOn="{StaticResource DefaultTextBoxStyle}">
         <Setter Property="FontSize" Value="12.5" />
         <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
         <Setter Property="Foreground" Value="{DynamicResource Fg}" />
@@ -261,7 +261,7 @@
         </Setter>
     </Style>
 
-    <Style TargetType="PasswordBox" BasedOn="{StaticResource MaterialDesignOutlinedPasswordBox}">
+    <Style TargetType="PasswordBox" BasedOn="{StaticResource DefaultPasswordBoxStyle}">
         <Setter Property="FontSize" Value="12.5" />
         <Setter Property="MinHeight" Value="34" />
         <Setter Property="Padding" Value="10,6" />
@@ -269,7 +269,7 @@
     </Style>
 
     <!-- ================================================== combobox ==== -->
-    <Style TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignOutlinedComboBox}">
+    <Style TargetType="ComboBox" BasedOn="{StaticResource DefaultComboBoxStyle}">
         <Setter Property="FontSize" Value="12.5" />
         <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
         <Setter Property="Foreground" Value="{DynamicResource Fg}" />
@@ -286,7 +286,7 @@
         </Style.Triggers>
     </Style>
 
-    <Style x:Key="FlatComboBox" TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignComboBox}">
+    <Style x:Key="FlatComboBox" TargetType="ComboBox" BasedOn="{StaticResource DefaultComboBoxStyle}">
         <Setter Property="materialDesign:TextFieldAssist.DecorationVisibility" Value="Collapsed" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Foreground" Value="{DynamicResource Fg}" />
@@ -300,7 +300,7 @@
     </Style>
 
     <!-- ========================================== toggles / choices ==== -->
-    <Style TargetType="CheckBox" BasedOn="{StaticResource MaterialDesignCheckBox}">
+    <Style TargetType="CheckBox" BasedOn="{StaticResource DefaultCheckBoxStyle}">
         <Setter Property="FontSize" Value="12.5" />
         <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
         <Setter Property="Foreground" Value="{DynamicResource Fg}" />
@@ -310,7 +310,7 @@
         <Setter Property="FocusVisualStyle" Value="{StaticResource RingFocus}" />
     </Style>
 
-    <Style TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignRadioButton}">
+    <Style TargetType="RadioButton" BasedOn="{StaticResource DefaultRadioButtonStyle}">
         <Setter Property="FontSize" Value="12.5" />
         <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
         <Setter Property="Foreground" Value="{DynamicResource Fg}" />
@@ -456,7 +456,7 @@
     </Style>
 
     <!-- ================================================== datagrid ==== -->
-    <Style TargetType="DataGrid" BasedOn="{StaticResource MaterialDesignDataGrid}">
+    <Style TargetType="DataGrid" BasedOn="{StaticResource DefaultDataGridStyle}">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="RowBackground" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
@@ -472,14 +472,14 @@
         <Setter Property="materialDesign:DataGridAssist.ColumnHeaderPadding" Value="8,6" />
     </Style>
 
-    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource DefaultDataGridColumnHeaderStyle}">
         <Setter Property="Foreground" Value="{DynamicResource FgMuted}" />
         <Setter Property="FontFamily" Value="{DynamicResource UiFontMedium}" />
         <Setter Property="FontSize" Value="10.5" />
         <Setter Property="HorizontalContentAlignment" Value="Left" />
     </Style>
 
-    <Style TargetType="DataGridCell" BasedOn="{StaticResource MaterialDesignDataGridCell}">
+    <Style TargetType="DataGridCell" BasedOn="{StaticResource DefaultDataGridCellStyle}">
         <Setter Property="Foreground" Value="{DynamicResource Fg}" />
         <Setter Property="FontSize" Value="12.5" />
         <Setter Property="BorderThickness" Value="0" />
@@ -490,7 +490,7 @@
         brushes handed to a Setter get frozen by style sealing, so animating Background.Color
         there would throw at run time.
     -->
-    <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+    <Style TargetType="DataGridRow" BasedOn="{StaticResource DefaultDataGridRowStyle}">
         <Setter Property="Foreground" Value="{DynamicResource Fg}" />
         <Setter Property="Background" Value="Transparent" />
         <Style.Triggers>
@@ -749,7 +749,7 @@
     </Style>
 
     <!-- ===================================================== misc ===== -->
-    <Style TargetType="ProgressBar" BasedOn="{StaticResource MaterialDesignLinearProgressBar}">
+    <Style TargetType="ProgressBar">
         <Setter Property="Height" Value="3" />
         <Setter Property="Foreground" Value="{DynamicResource Accent}" />
         <Setter Property="Background" Value="Transparent" />
@@ -796,7 +796,7 @@
         </Setter>
     </Style>
 
-    <Style TargetType="Separator" BasedOn="{StaticResource MaterialDesignSeparator}">
+    <Style TargetType="Separator">
         <Setter Property="Background" Value="{DynamicResource BorderBrushSoft}" />
         <Setter Property="Margin" Value="6,4" />
     </Style>
@@ -829,7 +829,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <Style x:Key="PillText" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignTextBlock}">
+    <Style x:Key="PillText" TargetType="TextBlock">
         <Setter Property="FontSize" Value="9.5" />
         <Setter Property="FontFamily" Value="{DynamicResource UiFontMedium}" />
         <Setter Property="Foreground" Value="{DynamicResource FgDim}" />

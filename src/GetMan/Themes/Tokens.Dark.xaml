@@ -77,4 +77,55 @@
     <SolidColorBrush x:Key="TimingWait" Color="#FFFBBF24" />
     <SolidColorBrush x:Key="TimingDownload" Color="#FF4ADE80" />
 
+
+    <!-- ================================================ Fluent bridge ==== -->
+    <!--
+        WPF-UI reads its own resource names, so the Fluent controls are pointed at the
+        GetMan tokens rather than left on their defaults - which are a #202020 surface and
+        a salmon accent. These live in the theme dictionaries so a theme switch moves them
+        too, and StaticResource works because the tokens above are already defined.
+    -->
+    <SolidColorBrush x:Key="ApplicationBackgroundBrush" Color="{StaticResource Bg1Color}" />
+    <SolidColorBrush x:Key="SolidBackgroundFillColorBaseBrush" Color="{StaticResource Bg1Color}" />
+    <SolidColorBrush x:Key="SolidBackgroundFillColorSecondaryBrush" Color="{StaticResource Bg2Color}" />
+    <SolidColorBrush x:Key="SolidBackgroundFillColorTertiaryBrush" Color="{StaticResource Bg3Color}" />
+    <SolidColorBrush x:Key="LayerFillColorDefaultBrush" Color="{StaticResource Bg2Color}" />
+    <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="{StaticResource Bg2Color}" />
+    <SolidColorBrush x:Key="CardBackgroundFillColorSecondaryBrush" Color="{StaticResource Bg3Color}" />
+    <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="{StaticResource TextDimColor}" />
+    <SolidColorBrush x:Key="TextFillColorTertiaryBrush" Color="{StaticResource TextMutedColor}" />
+    <SolidColorBrush x:Key="TextFillColorDisabledBrush" Color="{StaticResource TextMutedColor}" />
+    <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="{StaticResource TextMutedColor}" />
+    <SolidColorBrush x:Key="ControlFillColorDefaultBrush" Color="{StaticResource Bg2Color}" />
+    <SolidColorBrush x:Key="ControlFillColorSecondaryBrush" Color="{StaticResource Bg3Color}" />
+    <SolidColorBrush x:Key="ControlFillColorTertiaryBrush" Color="{StaticResource Bg3Color}" />
+    <SolidColorBrush x:Key="ControlFillColorInputActiveBrush" Color="{StaticResource Bg0Color}" />
+    <SolidColorBrush x:Key="ControlAltFillColorSecondaryBrush" Color="{StaticResource Bg2Color}" />
+    <SolidColorBrush x:Key="ControlAltFillColorTertiaryBrush" Color="{StaticResource Bg3Color}" />
+    <SolidColorBrush x:Key="SubtleFillColorSecondaryBrush" Color="{StaticResource Bg3Color}" />
+    <SolidColorBrush x:Key="SubtleFillColorTertiaryBrush" Color="{StaticResource Bg3Color}" />
+    <SolidColorBrush x:Key="ControlStrokeColorDefaultBrush" Color="{StaticResource BorderSoftColor}" />
+    <SolidColorBrush x:Key="ControlStrokeColorSecondaryBrush" Color="{StaticResource BorderColor}" />
+    <SolidColorBrush x:Key="ControlElevationBorderBrush" Color="{StaticResource BorderColor}" />
+    <SolidColorBrush x:Key="CircleElevationBorderBrush" Color="{StaticResource BorderColor}" />
+    <SolidColorBrush x:Key="ControlStrongStrokeColorDefaultBrush" Color="{StaticResource BorderColor}" />
+    <SolidColorBrush x:Key="DividerStrokeColorDefaultBrush" Color="{StaticResource BorderSoftColor}" />
+    <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="{StaticResource ActionColor}" />
+    <SolidColorBrush x:Key="AccentFillColorSecondaryBrush" Color="{StaticResource ActionHoverColor}" />
+    <SolidColorBrush x:Key="AccentFillColorTertiaryBrush" Color="{StaticResource ActionHoverColor}" />
+    <SolidColorBrush x:Key="SystemAccentColorPrimaryBrush" Color="{StaticResource ActionColor}" />
+    <SolidColorBrush x:Key="SystemAccentColorSecondaryBrush" Color="{StaticResource ActionHoverColor}" />
+    <SolidColorBrush x:Key="SystemAccentColorTertiaryBrush" Color="{StaticResource ActionHoverColor}" />
+    <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="{StaticResource OnActionColor}" />
+    <SolidColorBrush x:Key="TextOnAccentFillColorSecondaryBrush" Color="{StaticResource OnActionColor}" />
+    <SolidColorBrush x:Key="AccentTextFillColorPrimaryBrush" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="AccentTextFillColorSecondaryBrush" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="AccentTextFillColorTertiaryBrush" Color="{StaticResource AccentDimColor}" />
+    <SolidColorBrush x:Key="FocusStrokeColorOuterBrush" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="TextControlElevationBorderFocusedBrush" Color="{StaticResource AccentColor}" />
+
+    <CornerRadius x:Key="ControlCornerRadius">6</CornerRadius>
+    <CornerRadius x:Key="OverlayCornerRadius">8</CornerRadius>
+
 </ResourceDictionary>
