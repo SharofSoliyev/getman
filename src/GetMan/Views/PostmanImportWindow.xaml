@@ -1,8 +1,9 @@
 <Window x:Class="GetMan.Views.PostmanImportWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:loc="clr-namespace:GetMan.Services"
-        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:ctl="clr-namespace:GetMan.Controls"
         Title="Import from Postman" Height="660" Width="960"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
     <Grid>
@@ -13,24 +14,24 @@
         </Grid.RowDefinitions>
 
         <!-- detection banner -->
-        <materialDesign:ColorZone Grid.Row="0" Mode="Standard" Background="{DynamicResource Bg2}" Padding="18,14"
-                                  materialDesign:ElevationAssist.Elevation="Dp2">
+        <Border Grid.Row="0" Background="{DynamicResource Bg2}" Padding="18,14"
+>
             <StackPanel Orientation="Horizontal">
-                <materialDesign:PackIcon x:Name="StatusIcon" Kind="RocketLaunchOutline" Width="26" Height="26"
+                <ui:SymbolIcon x:Name="StatusIcon" Symbol="Rocket24" FontSize="26"
                                          VerticalAlignment="Center" Foreground="{DynamicResource Accent}" />
                 <StackPanel Margin="14,0,0,0">
                     <TextBlock x:Name="StatusTitle" Style="{StaticResource TitleText}" Text="{loc:T s.looking_for_postman}" />
                     <TextBlock x:Name="StatusDetail" Style="{StaticResource Caption}" Margin="0,3,0,0" />
                 </StackPanel>
             </StackPanel>
-        </materialDesign:ColorZone>
+        </Border>
 
         <TabControl Grid.Row="1" Style="{StaticResource SubTabControl}" Margin="0,4,0,0">
             <!-- ============================================ local files ==== -->
             <TabItem>
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="Laptop" Width="15" Height="15" VerticalAlignment="Center" />
+                        <ui:SymbolIcon Symbol="Laptop24" FontSize="15" VerticalAlignment="Center" />
                         <TextBlock Text="{loc:T s.on_this_computer}" Margin="7,0,0,0" />
                     </StackPanel>
                 </TabItem.Header>
@@ -57,7 +58,7 @@
                             Background="{DynamicResource WarnWash}" CornerRadius="8" Padding="12,9"
                             VerticalAlignment="Top" Panel.ZIndex="1">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="InformationOutline" Width="16" Height="16"
+                            <ui:SymbolIcon Symbol="Info24" FontSize="16"
                                                      VerticalAlignment="Top" Margin="0,1,0,0"
                                                      Foreground="{DynamicResource Warn}" />
                             <TextBlock x:Name="SnapshotNoteText" Style="{StaticResource Caption}" Margin="9,0,0,0"
@@ -88,7 +89,7 @@
 
                         <StackPanel x:Name="NoFilesPanel" VerticalAlignment="Center" HorizontalAlignment="Center"
                                     Visibility="Collapsed" MaxWidth="520">
-                            <materialDesign:PackIcon Kind="FileSearchOutline" Width="42" Height="42"
+                            <ui:SymbolIcon Symbol="DocumentSearch24" FontSize="42"
                                                      HorizontalAlignment="Center" Foreground="{DynamicResource Bg4}" />
                             <TextBlock Text="{loc:T s.no_postman_export_files_found}" Style="{StaticResource TitleText}"
                                        HorizontalAlignment="Center" Margin="0,12,0,0" />
@@ -103,7 +104,7 @@
             <TabItem>
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="CloudDownloadOutline" Width="15" Height="15" VerticalAlignment="Center" />
+                        <ui:SymbolIcon Symbol="CloudArrowDown24" FontSize="15" VerticalAlignment="Center" />
                         <TextBlock Text="{loc:T s.postman_account}" Margin="7,0,0,0" />
                     </StackPanel>
                 </TabItem.Header>
@@ -120,15 +121,15 @@
                             <Button DockPanel.Dock="Right" x:Name="FetchButton" Style="{StaticResource PrimaryButton}"
                                     Width="130" Height="34" Margin="10,0,0,0" Click="OnFetch">
                                 <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16" VerticalAlignment="Center" />
+                                    <ui:SymbolIcon Symbol="ArrowSync24" FontSize="16" VerticalAlignment="Center" />
                                     <TextBlock Text="{loc:T s.fetch}" Margin="6,0,0,0" />
                                 </StackPanel>
                             </Button>
-                            <TextBox x:Name="ApiKeyBox" materialDesign:HintAssist.Hint="{loc:T s.postman_api_key_pmak}"
+                            <TextBox x:Name="ApiKeyBox" ctl:PlaceholderAssist.Text="{loc:T s.postman_api_key_pmak}"
                                      FontFamily="{StaticResource MonoFont}" />
                         </DockPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                            <materialDesign:PackIcon Kind="KeyOutline" Width="14" Height="14"
+                            <ui:SymbolIcon Symbol="Key24" FontSize="14"
                                                      Foreground="{DynamicResource FgMuted}" VerticalAlignment="Center" />
                             <TextBlock Style="{StaticResource Caption}" Margin="7,0,0,0"
                                        Text="{loc:T s.create_one_at_postman_co_profile_menu_settin_62886}" />
@@ -169,7 +170,7 @@
                     <Button Content="{loc:T s.close}" MinWidth="90" Margin="0,0,10,0" Click="OnClose" />
                     <Button x:Name="ImportButton" Style="{StaticResource PrimaryButton}" MinWidth="170" Click="OnImport">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="TrayArrowDown" Width="16" Height="16" VerticalAlignment="Center" />
+                            <ui:SymbolIcon Symbol="ArrowDownload24" FontSize="16" VerticalAlignment="Center" />
                             <TextBlock Text="{loc:T s.import_selected}" Margin="7,0,0,0" />
                         </StackPanel>
                     </Button>

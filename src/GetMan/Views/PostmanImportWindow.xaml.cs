@@ -34,7 +34,7 @@ public partial class PostmanImportWindow : Window
         _install = PostmanDiscovery.Detect();
         if (_install.Installed)
         {
-            StatusIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.CheckCircleOutline;
+            StatusIcon.Symbol = Wpf.Ui.Controls.SymbolRegular.CheckmarkCircle24;
             StatusTitle.Text = string.IsNullOrEmpty(_install.Version)
                 ? Loc.T("s.postman_installed")
                 : Loc.T("s.postman_installed_version", _install.Version);
@@ -44,7 +44,7 @@ public partial class PostmanImportWindow : Window
         }
         else
         {
-            StatusIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.InformationOutline;
+            StatusIcon.Symbol = Wpf.Ui.Controls.SymbolRegular.Info24;
             StatusTitle.Text = Loc.T("s.postman_not_installed");
             StatusDetail.Text = Loc.T("s.postman_not_installed_detail");
         }
@@ -60,7 +60,7 @@ public partial class PostmanImportWindow : Window
     {
         _preview = true;
 
-        StatusIcon.Kind = MaterialDesignThemes.Wpf.PackIconKind.CheckCircleOutline;
+        StatusIcon.Symbol = Wpf.Ui.Controls.SymbolRegular.CheckmarkCircle24;
         StatusTitle.Text = Loc.T("s.postman_installed_version", "11.2.0");
         StatusDetail.Text = Loc.T("s.postman_db_found");
 

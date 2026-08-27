@@ -1,10 +1,10 @@
 <UserControl x:Class="GetMan.Views.RequestView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:loc="clr-namespace:GetMan.Services"
              xmlns:ctl="clr-namespace:GetMan.Controls"
              xmlns:views="clr-namespace:GetMan.Views"
-             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              x:Name="Root">
     <Grid Background="{DynamicResource Bg0}">
         <Grid.RowDefinitions>
@@ -21,8 +21,8 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <materialDesign:Card Grid.Column="0" UniformCornerRadius="8" Background="{DynamicResource Bg0}"
-                                     materialDesign:ElevationAssist.Elevation="Dp1" Padding="0">
+                <Border Grid.Column="0" CornerRadius="8" Background="{DynamicResource Bg0}"
+ Padding="0">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -55,24 +55,24 @@
                                        Visibility="{Binding Request.Url, Converter={StaticResource NullToVis}, ConverterParameter=invert}" />
                         </Grid>
                     </Grid>
-                </materialDesign:Card>
+                </Border>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="12,0,0,0">
                     <Button MinWidth="104" Height="38" Padding="18,0" Style="{StaticResource PrimaryButton}"
                             Command="{Binding SendCommand}" AutomationProperties.AutomationId="SendButton" ToolTip="{loc:T s.send_the_request_ctrl_enter}">
                         <StackPanel Orientation="Horizontal">
                             <!-- The paper plane nudges forward while the button is hovered. -->
-                            <materialDesign:PackIcon VerticalAlignment="Center" Width="17" Height="17"
+                            <ui:SymbolIcon VerticalAlignment="Center" FontSize="17"
                                                      RenderTransformOrigin="0.5,0.5">
-                                <materialDesign:PackIcon.RenderTransform>
+                                <ui:SymbolIcon.RenderTransform>
                                     <TranslateTransform X="0" />
-                                </materialDesign:PackIcon.RenderTransform>
-                                <materialDesign:PackIcon.Style>
-                                    <Style TargetType="materialDesign:PackIcon">
-                                        <Setter Property="Kind" Value="Send" />
+                                </ui:SymbolIcon.RenderTransform>
+                                <ui:SymbolIcon.Style>
+                                    <Style TargetType="ui:SymbolIcon">
+                                        <Setter Property="Symbol" Value="Send24" />
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsSending}" Value="True">
-                                                <Setter Property="Kind" Value="StopCircleOutline" />
+                                                <Setter Property="Symbol" Value="RecordStop24" />
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}"
                                                          Value="True">
@@ -97,8 +97,8 @@
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </materialDesign:PackIcon.Style>
-                            </materialDesign:PackIcon>
+                                </ui:SymbolIcon.Style>
+                            </ui:SymbolIcon>
                             <TextBlock Margin="7,0,0,0" FontFamily="{StaticResource UiFontMedium}">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
@@ -119,7 +119,7 @@
                             Command="{Binding DataContext.SaveTabCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                             CommandParameter="{Binding}">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="ContentSaveOutline" Width="16" Height="16" VerticalAlignment="Center" />
+                            <ui:SymbolIcon Symbol="Save24" FontSize="16" VerticalAlignment="Center" />
                             <TextBlock Text="{loc:T s.save}" Margin="6,0,0,0" Foreground="{DynamicResource Fg}" />
                         </StackPanel>
                     </Button>
@@ -127,7 +127,7 @@
                     <Button Style="{StaticResource IconBtn}" Height="38" Width="38" Margin="8,0,0,0"
                             ToolTip="{loc:T s.generate_a_code_snippet}" AutomationProperties.AutomationId="CodeButton"
                             Command="{Binding DataContext.OpenCodeCommand, RelativeSource={RelativeSource AncestorType=Window}}">
-                        <materialDesign:PackIcon Kind="CodeTags" Width="19" Height="19" />
+                        <ui:SymbolIcon Symbol="Code24" FontSize="19" />
                     </Button>
                 </StackPanel>
             </Grid>
@@ -205,7 +205,7 @@
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
                         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="16,10,16,8">
-                            <materialDesign:PackIcon Kind="LanguageJavascript" Width="15" Height="15"
+                            <ui:SymbolIcon Symbol="Code24" FontSize="15"
                                                      Foreground="{DynamicResource FgMuted}" VerticalAlignment="Center" />
                             <TextBlock Margin="7,0,0,0" Style="{StaticResource Caption}" TextWrapping="Wrap"
                                        Text="{loc:T s.runs_before_the_request_is_sent_pm_environme_98803}" />
@@ -231,7 +231,7 @@
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
                         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="16,10,16,8">
-                            <materialDesign:PackIcon Kind="TestTube" Width="15" Height="15"
+                            <ui:SymbolIcon Symbol="Beaker24" FontSize="15"
                                                      Foreground="{DynamicResource FgMuted}" VerticalAlignment="Center" />
                             <TextBlock Margin="7,0,0,0" Style="{StaticResource Caption}" TextWrapping="Wrap"
                                        Text="{loc:T s.runs_after_the_response_arrives_use_pm_test_90282}" />
@@ -258,15 +258,17 @@
 
                             <WrapPanel Margin="0,16,0,0">
                                 <TextBox Width="150" Margin="0,0,14,12"
-                                         materialDesign:HintAssist.Hint="{loc:T s.maximum_redirects}"
+                                         ctl:PlaceholderAssist.Text="{loc:T s.maximum_redirects}"
                                          Text="{Binding Request.Settings.MaxRedirects}" />
                                 <TextBox Width="180" Margin="0,0,14,12"
-                                         materialDesign:HintAssist.Hint="{loc:T s.timeout_in_ms_0_none}"
+                                         ctl:PlaceholderAssist.Text="{loc:T s.timeout_in_ms_0_none}"
                                          Text="{Binding Request.Settings.TimeoutMs}" />
-                                <ComboBox Width="150" Margin="0,0,14,12"
-                                          materialDesign:HintAssist.Hint="{loc:T s.http_version}"
-                                          ItemsSource="{Binding HttpVersions, ElementName=Root}"
-                                          SelectedValue="{Binding Request.Settings.HttpVersion, Mode=TwoWay}" />
+                                <StackPanel Margin="0,0,14,12">
+                                    <TextBlock Text="{loc:T s.http_version}" Style="{StaticResource FieldLabel}" />
+                                    <ComboBox Width="150"
+                                              ItemsSource="{Binding HttpVersions, ElementName=Root}"
+                                              SelectedValue="{Binding Request.Settings.HttpVersion, Mode=TwoWay}" />
+                                </StackPanel>
                             </WrapPanel>
                         </StackPanel>
                     </ScrollViewer>

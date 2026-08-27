@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace GetMan;
@@ -9,6 +10,9 @@ namespace GetMan;
 public partial class App : Application
 {
     [DllImport("kernel32.dll")] private static extern bool AttachConsole(int processId);
+    /// <summary>True for --self-check, --render and --shots: a window is built but not used.</summary>
+    internal static bool Offscreen { get; private set; }
+
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -20,6 +24,12 @@ public partial class App : Application
         {
             if (args.ExceptionObject is Exception ex) LogCrash(ex);
         };
+
+        // Every alternate entry point renders a window nobody looks at. A Mica backdrop
+        // would put whatever wallpaper the build machine has behind the chrome strips, so
+        // the screenshots would differ per machine; MainWindow reads this and stays opaque.
+        Offscreen = e.Args.Contains("--self-check") || e.Args.Contains("--render")
+                    || e.Args.Contains("--shots");
 
         base.OnStartup(e);
 
@@ -265,7 +275,13 @@ public partial class App : Application
 
     private static void Capture(Window window, string outputPath)
     {
-        var root = (FrameworkElement)window.Content;
+        // The adorner layer sits above the content, not inside it, so capturing window.Content
+        // leaves out everything drawn there - the placeholder hints, most visibly. Rendering from
+        // the window's own visual child picks up the AdornerDecorator with them.
+        var root = VisualTreeHelper.GetChildrenCount(window) > 0
+            ? VisualTreeHelper.GetChild(window, 0) as FrameworkElement ?? (FrameworkElement)window.Content
+            : (FrameworkElement)window.Content;
+
         root.UpdateLayout();
         ForceOpaque(root);
         root.UpdateLayout();

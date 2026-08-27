@@ -1,5 +1,5 @@
-using MaterialDesignThemes.Wpf;
 using System.Globalization;
+using Wpf.Ui.Controls;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
@@ -160,9 +160,9 @@ public class NodeIconConverter : IValueConverter
 {
     public object Convert(object value, Type t, object p, CultureInfo c) => value switch
     {
-        NodeKind.Collection => PackIconKind.FolderStarMultipleOutline,
-        NodeKind.Folder => PackIconKind.FolderOutline,
-        _ => PackIconKind.CircleSmall
+        NodeKind.Collection => SymbolRegular.Library24,
+        NodeKind.Folder => SymbolRegular.Folder24,
+        _ => SymbolRegular.Circle24
     };
     public object ConvertBack(object value, Type t, object p, CultureInfo c) => Binding.DoNothing;
 }
@@ -171,9 +171,9 @@ public class TestStatusIconConverter : IValueConverter
 {
     public object Convert(object value, Type t, object p, CultureInfo c) => value switch
     {
-        TestStatus.Pass => PackIconKind.CheckCircle,
-        TestStatus.Fail => PackIconKind.CloseCircle,
-        _ => PackIconKind.MinusCircle
+        TestStatus.Pass => SymbolRegular.CheckmarkCircle24,
+        TestStatus.Fail => SymbolRegular.DismissCircle24,
+        _ => SymbolRegular.SubtractCircle24
     };
     public object ConvertBack(object value, Type t, object p, CultureInfo c) => Binding.DoNothing;
 }
@@ -182,10 +182,10 @@ public class LogLevelIconConverter : IValueConverter
 {
     public object Convert(object value, Type t, object p, CultureInfo c) => (value as string) switch
     {
-        "error" => PackIconKind.AlertCircleOutline,
-        "warn" => PackIconKind.AlertOutline,
-        "info" => PackIconKind.InformationOutline,
-        _ => PackIconKind.ChevronRight
+        "error" => SymbolRegular.ErrorCircle24,
+        "warn" => SymbolRegular.Warning24,
+        "info" => SymbolRegular.Info24,
+        _ => SymbolRegular.ChevronRight24
     };
     public object ConvertBack(object value, Type t, object p, CultureInfo c) => Binding.DoNothing;
 }
