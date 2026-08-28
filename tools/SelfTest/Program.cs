@@ -1007,6 +1007,62 @@ public static class Program
         Check("parameterised randomInt in range", n >= 5 && n <= 7, n.ToString());
         Check("randomEmail looks like an email", r.Resolve("{{$randomEmail}}").Contains("@"));
         Eq("spaces inside braces", r.Resolve("{{  host  }}"), "local.example");
+
+        TestVariableCatalog();
+    }
+
+    /// <summary>
+    /// The list the {{...}} picker offers. Everything here is about the list agreeing with the
+    /// resolver: an entry that inserts a token resolving to something else, or to nothing, is
+    /// worse than no list at all.
+    /// </summary>
+    private static void TestVariableCatalog()
+    {
+        var resolver = new VariableResolver();
+        resolver.Globals["host"] = "global.example";
+        resolver.Globals["onlyGlobal"] = "g";
+        resolver.CollectionVars["host"] = "collection.example";
+        resolver.EnvironmentVars["host"] = "env.example";
+        resolver.EnvironmentVars["baseUrl"] = "https://api.example.com";
+        VariableCatalog.Source = () => resolver;
+
+        var all = VariableCatalog.All();
+        Eq("host is offered once", all.Count(s => s.Name == "host"), 1);
+        Eq("host is attributed to the scope that wins",
+            all.First(s => s.Name == "host").Scope, VariableScope.Environment);
+        Eq("host preview is the winning value",
+            all.First(s => s.Name == "host").Value, "env.example");
+        Check("a name only globals have is still offered", all.Any(s => s.Name == "onlyGlobal"));
+        Eq("token is what gets typed", all.First(s => s.Name == "host").Token, "{{host}}");
+
+        // Every offered name has to resolve. Dynamic returns the token back for a name it does
+        // not know, which in a picker would look like a working choice and silently send "{{x}}".
+        foreach (var name in VariableResolver.DynamicNames)
+        {
+            var produced = resolver.Resolve("{{" + name + "}}");
+            Check("dynamic " + name + " produces a value", produced != "{{" + name + "}}", produced);
+        }
+        foreach (var suggestion in all.Where(s => s.Scope != VariableScope.Dynamic))
+            Check("offered " + suggestion.Name + " resolves",
+                resolver.Resolve(suggestion.Token) != suggestion.Token);
+
+        // baseUrl only contains "url"; urlSuffix starts with it, so it has to come first.
+        resolver.EnvironmentVars["urlSuffix"] = "/v1";
+        var url = VariableCatalog.Matching("url");
+        Check("both matches are offered",
+            url.Any(s => s.Name == "urlSuffix") && url.Any(s => s.Name == "baseUrl"));
+        Check("a name starting with the text outranks one merely containing it",
+            url.TakeWhile(s => s.Name != "baseUrl").Any(s => s.Name == "urlSuffix"),
+            string.Join(", ", url.Take(3).Select(s => s.Name)));
+        Check("filter is case insensitive", VariableCatalog.Matching("HOST").Any(s => s.Name == "host"));
+        Check("filter matches inside a name", VariableCatalog.Matching("ase").Any(s => s.Name == "baseUrl"));
+        Eq("no match means no list", VariableCatalog.Matching("zzzznope").Count, 0);
+        Check("dynamic generators are offered", VariableCatalog.Matching("$random").Count > 10);
+
+        VariableCatalog.Source = null;
+        Check("no source still lists the generators", VariableCatalog.All().Count > 10);
+        Check("no source lists nothing else",
+            VariableCatalog.All().All(s => s.Scope == VariableScope.Dynamic));
     }
 
     private static void TestCurl()

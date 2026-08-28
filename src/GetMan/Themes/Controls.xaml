@@ -101,17 +101,58 @@
         </Style.Triggers>
     </Style>
 
-    <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+    <!--
+        The one filled button in the app - Send, and the empty-state call to action. It carries its
+        own template rather than deriving from a Fluent style: the fill is the point, and a style
+        that only sets Background loses the colour again on hover, where the Fluent template
+        switches to its own ButtonBackgroundPointerOver brush.
+    -->
+    <Style x:Key="PrimaryButton" TargetType="Button">
         <Setter Property="Height" Value="32" />
         <Setter Property="MinWidth" Value="0" />
         <Setter Property="Padding" Value="16,0" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="FontFamily" Value="{DynamicResource UiFontMedium}" />
+        <Setter Property="Background" Value="{DynamicResource Action}" />
+        <Setter Property="Foreground" Value="{DynamicResource OnAction}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="ctl:HoverAssist.Scale" Value="1.04" />
         <Setter Property="ctl:HoverAssist.Lift" Value="1" />
         <Setter Property="FocusVisualStyle" Value="{StaticResource RingFocus}" />
         <Setter Property="ctl:HoverAssist.PressScale" Value="0.97" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Fill" Background="{TemplateBinding Background}"
+                            CornerRadius="{DynamicResource ControlCornerRadius}"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter x:Name="Content" Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          TextElement.Foreground="{TemplateBinding Foreground}"
+                                          RecognizesAccessKey="True" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Fill" Property="Background" Value="{DynamicResource ActionHover}" />
+                        </Trigger>
+                        <!-- Not the hover colour again: pressed has to read as a separate state. -->
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Fill" Property="Background" Value="{DynamicResource ActionHover}" />
+                            <Setter TargetName="Content" Property="Opacity" Value="0.82" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Fill" Property="Background" Value="{DynamicResource Bg4}" />
+                            <Setter TargetName="Content" Property="TextElement.Foreground"
+                                    Value="{DynamicResource FgMuted}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <Style x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
@@ -186,12 +227,15 @@
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushMain}" />
         <Setter Property="CaretBrush" Value="{DynamicResource Accent}" />
+        <!-- Auth fields and every other plain field inherit this, so {{ offers the variables. -->
+        <Setter Property="ctl:VariableAssist.Enabled" Value="True" />
     </Style>
 
     <!-- Chromeless field used inside data grids, the URL bar and the tree rename box. -->
     <Style x:Key="FlatTextBox" TargetType="TextBox">
         <Setter Property="Foreground" Value="{DynamicResource Fg}" />
         <Setter Property="Background" Value="Transparent" />
+        <Setter Property="ctl:VariableAssist.Enabled" Value="True" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Padding" Value="4,2" />
         <Setter Property="Height" Value="Auto" />
@@ -1145,5 +1189,64 @@
             </Trigger>
         </Style.Triggers>
     </Style>
+
+    <!-- ============================================ variable picker ==== -->
+    <!--
+        The list that drops out of a field when you type {{. It never takes focus, so there is no
+        focus ring and no hover-vs-selection ambiguity: the highlighted row is the one Enter will
+        insert, and that is the only state worth drawing.
+    -->
+    <Style x:Key="VariablePickerList" TargetType="ListBox">
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+        <Setter Property="Padding" Value="0" />
+    </Style>
+
+    <Style x:Key="VariablePickerItem" TargetType="ListBoxItem">
+        <Setter Property="Padding" Value="8,5" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="Row" Background="Transparent" CornerRadius="5"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Row" Property="Background" Value="{DynamicResource Bg3}" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Row" Property="Background" Value="{DynamicResource AccentWash}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <DataTemplate x:Key="VariablePickerTemplate">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- The name in the mono face the token will be typed in, the value under it so the
+                 choice is made on what it holds rather than on the name alone. -->
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="{Binding Name}" FontFamily="{DynamicResource MonoFont}"
+                           FontSize="12" Foreground="{DynamicResource Fg}" />
+                <TextBlock Text="{Binding Preview}" FontSize="11" Margin="0,1,0,0"
+                           Foreground="{DynamicResource FgMuted}"
+                           TextTrimming="CharacterEllipsis" MaxWidth="280" HorizontalAlignment="Left" />
+            </StackPanel>
+
+            <Border Grid.Column="1" Style="{StaticResource CountPill}" VerticalAlignment="Center">
+                <TextBlock Text="{Binding ScopeLabel}" Style="{StaticResource PillText}" />
+            </Border>
+        </Grid>
+    </DataTemplate>
 
 </ResourceDictionary>

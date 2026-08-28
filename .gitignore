@@ -3,6 +3,12 @@ obj/
 dist/
 dist-cli/
 
+# Where the release workflow, and a local dry run of it, put the published binaries.
+publish/
+release/
+release-local/
+release-notes.md
+
 # Visual Studio / Rider / VS Code
 .vs/
 .idea/

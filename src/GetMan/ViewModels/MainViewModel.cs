@@ -48,6 +48,11 @@ public partial class MainViewModel : ObservableObject
         IsLightTheme = string.Equals(Settings.Theme, "Light", StringComparison.OrdinalIgnoreCase);
         Controls.ThemeManager.Apply(IsLightTheme ? Controls.AppTheme.Light : Controls.AppTheme.Dark);
 
+        // What the {{...}} picker offers. A delegate rather than a snapshot, so switching
+        // environment or opening a request in another collection changes the list with no
+        // bookkeeping - the picker asks at the moment it opens.
+        Services.VariableCatalog.Source = () => BuildResolver(SelectedTab?.Node ?? SelectedNode);
+
         RestoreTabs();
         if (Tabs.Count == 0) NewRequest();
     }

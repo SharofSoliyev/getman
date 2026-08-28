@@ -125,6 +125,26 @@ public class VariableResolver
     private static readonly string[] FileExts = { "json", "xml", "csv", "png", "pdf", "txt" };
     private static readonly string[] MimeTypes = { "application/json", "text/plain", "image/png", "application/pdf" };
 
+    /// <summary>
+    /// The generators the variable picker offers, in the spelling Postman uses. Every name here
+    /// has to be one <see cref="Dynamic"/> answers - the self-test proves it, because a name that
+    /// falls through returns the token itself and would look like a working choice in the list.
+    /// </summary>
+    public static readonly string[] DynamicNames =
+    {
+        "$guid", "$uuid", "$randomUUID", "$timestamp", "$epoch", "$isoTimestamp",
+        "$randomInt", "$randomBoolean", "$randomAlphaNumeric", "$randomPassword",
+        "$randomFirstName", "$randomLastName", "$randomFullName", "$randomUserName",
+        "$randomEmail", "$randomExampleEmail", "$randomCity", "$randomCountry",
+        "$randomCountryCode", "$randomStreetAddress", "$randomPhoneNumber", "$randomIP",
+        "$randomIPV6", "$randomUserAgent", "$randomUrl", "$randomDomainName",
+        "$randomProtocol", "$randomColor", "$randomHexColor", "$randomWord", "$randomWords",
+        "$randomLoremSentence", "$randomLoremParagraph", "$randomCompanyName",
+        "$randomJobTitle", "$randomMonth", "$randomWeekday", "$randomPrice",
+        "$randomBankAccount", "$randomDatePast", "$randomDateFuture", "$randomDateRecent",
+        "$randomFileExt", "$randomMimeType"
+    };
+
     private string Pick(string[] arr) => arr[_rnd.Next(arr.Length)];
 
     public string Dynamic(string token)

@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -29,7 +30,7 @@ public partial class App : Application
         // would put whatever wallpaper the build machine has behind the chrome strips, so
         // the screenshots would differ per machine; MainWindow reads this and stays opaque.
         Offscreen = e.Args.Contains("--self-check") || e.Args.Contains("--render")
-                    || e.Args.Contains("--shots");
+                    || e.Args.Contains("--shots") || e.Args.Contains("--audit");
 
         base.OnStartup(e);
 
@@ -64,13 +65,180 @@ public partial class App : Application
             return;
         }
 
+        // Every window, in both themes, for reading with your eyes. --shots covers the four the
+        // README uses and only one of them is light, which is how a white-on-white Send button
+        // and an unreadable Postman import window both shipped unnoticed.
+        //   GetMan.exe --audit out-dir
+        var auditIndex = Array.IndexOf(e.Args, "--audit");
+        if (auditIndex >= 0 && e.Args.Length > auditIndex + 1)
+        {
+            AttachConsole(-1);
+            Environment.Exit(RenderAudit(e.Args[auditIndex + 1]));
+            return;
+        }
+
         MainWindow = new MainWindow();
         MainWindow.Show();
     }
 
     /// <summary>
+    /// Renders every window the app can open, once per theme. Nothing here is published; it
+    /// exists so a contrast regression is something you can look at rather than something a user
+    /// reports. Run it after any change to Themes/.
+    /// </summary>
+    private static int RenderAudit(string outputDir)
+    {
+        try
+        {
+            System.IO.Directory.CreateDirectory(outputDir);
+            Current.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+            var sandbox = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "GetMan.Audit");
+            try { if (System.IO.Directory.Exists(sandbox)) System.IO.Directory.Delete(sandbox, true); } catch { }
+            Services.PersistenceService.RootDir = sandbox;
+
+            foreach (var theme in new[] { Controls.AppTheme.Dark, Controls.AppTheme.Light })
+            {
+                var vm = new ViewModels.MainViewModel();
+                vm.SelectedLanguage = Services.Loc.Languages.First(l => l.Code == "en");
+                vm.IsLightTheme = theme == Controls.AppTheme.Light;
+                Controls.ThemeManager.Apply(theme);
+
+                var node = vm.Collections.FirstOrDefault();
+                var env = vm.Environments.FirstOrDefault() ?? vm.Globals;
+                var suffix = theme == Controls.AppTheme.Light ? "-light" : "-dark";
+
+                Shoot("main", 1440, 900, () =>
+                {
+                    var window = new MainWindow();
+                    var mainVm = (ViewModels.MainViewModel)window.DataContext;
+                    mainVm.SelectedLanguage = Services.Loc.Languages.First(l => l.Code == "en");
+                    mainVm.IsLightTheme = theme == Controls.AppTheme.Light;
+                    Controls.ThemeManager.Apply(theme);
+                    mainVm.SelectedEnvironment = mainVm.Environments.FirstOrDefault();
+                    SeedResponse(mainVm);
+                    return window;
+                });
+                Shoot("postman-import", 1000, 720, () =>
+                {
+                    var window = new Views.PostmanImportWindow(vm);
+                    window.SeedPreview();
+                    return window;
+                });
+                Shoot("import", 900, 640, () => new Views.ImportWindow(vm));
+                Shoot("environments", 900, 600, () => new Views.EnvironmentWindow(vm));
+                Shoot("settings", 820, 700, () => new Views.SettingsWindow(vm.Settings));
+                Shoot("cookies", 820, 600, () => new Views.CookieWindow(vm.Engine));
+                Shoot("code", 900, 640, () => new Views.CodeWindow(
+                    new Services.PreparedRequest { Method = "GET", Url = "https://example.com" }));
+                Shoot("save-request", 640, 420, () => new Views.SaveRequestWindow(vm, "Sample"));
+                Shoot("variables", 820, 560, () =>
+                    new Views.VariableEditorWindow("Variables", env.Variables, env));
+                if (node != null)
+                {
+                    Shoot("node-settings", 820, 620, () => new Views.NodeSettingsWindow(node));
+                    Shoot("runner", 1000, 640, () =>
+                    {
+                        var runner = new Views.RunnerWindow(vm, node);
+                        runner.SeedPreview();
+                        return runner;
+                    });
+                }
+
+                ShootPicker();
+
+                // A Popup is its own top-level window, so capturing the window it belongs to
+                // leaves it out. Its content is captured directly instead - which is the only
+                // way to look at the picker's contrast without a person driving the app.
+                void ShootPicker()
+                {
+                    try
+                    {
+                        var box = new TextBox
+                        {
+                            Width = 360,
+                            Style = Current.TryFindResource("FlatTextBox") as Style
+                        };
+                        var window = new Window
+                        {
+                            Width = 420,
+                            Height = 120,
+                            ShowInTaskbar = false,
+                            WindowStartupLocation = WindowStartupLocation.Manual,
+                            Left = -4000,
+                            Top = -4000,
+                            ShowActivated = false,
+                            Background = Current.TryFindResource("Bg1") as Brush,
+                            Content = new Grid { Children = { box } }
+                        };
+                        window.Show();
+                        box.Focus();
+                        Keyboard.Focus(box);
+                        Settle(300);
+
+                        box.Text = "{{";
+                        box.CaretIndex = 2;
+                        box.RaiseEvent(new TextChangedEventArgs(TextBoxBase.TextChangedEvent, UndoAction.None));
+                        Settle(400);
+
+                        var list = Controls.VariableAssist.OpenListFor(box);
+                        if (list?.Parent is FrameworkElement shell)
+                        {
+                            shell.UpdateLayout();
+                            CaptureElement(shell, System.IO.Path.Combine(outputDir, "variable-picker" + suffix + ".png"));
+                            Console.WriteLine("  variable-picker" + suffix);
+                        }
+                        else Console.WriteLine("  FAILED variable-picker" + suffix + " -> no list");
+
+                        window.Close();
+                        Settle(120);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("  FAILED variable-picker" + suffix + " -> " + ex.Message);
+                    }
+                }
+
+                void Shoot(string file, double width, double height, Func<Window> factory)
+                {
+                    try
+                    {
+                        var window = factory();
+                        window.ShowInTaskbar = false;
+                        window.WindowStartupLocation = WindowStartupLocation.Manual;
+                        window.Left = -4000;
+                        window.Top = -4000;
+                        window.ShowActivated = false;
+                        window.Width = width;
+                        window.Height = height;
+                        window.Show();
+                        Settle(900);
+                        Capture(window, System.IO.Path.Combine(outputDir, file + suffix + ".png"));
+                        window.Close();
+                        Settle(120);
+                        Console.WriteLine("  " + file + suffix);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("  FAILED " + file + suffix + " -> " + ex.Message);
+                    }
+                }
+            }
+
+            try { if (System.IO.Directory.Exists(sandbox)) System.IO.Directory.Delete(sandbox, true); } catch { }
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            LogCrash(ex);
+            Console.WriteLine("audit failed: " + ex);
+            return 1;
+        }
+    }
+
+    /// <summary>
     /// Renders the whole window in each theme and language. The window is shown off-screen
-    /// because Material's floating hints and selection states only settle in a live window.
+    /// because hover, focus and selection states only settle in a live window.
     /// </summary>
     private static int RenderShots(string outputDir)
     {
@@ -96,8 +264,6 @@ public partial class App : Application
 
             foreach (var shot in shots)
             {
-                Controls.ThemeManager.Apply(shot.Light ? Controls.AppTheme.Light : Controls.AppTheme.Dark);
-
                 // WindowStyle is left alone: the title bar is part of the content now, so
                 // stripping the chrome would hide the very thing the shot should show.
                 var window = new MainWindow
@@ -112,10 +278,14 @@ public partial class App : Application
                 window.Show();
                 Settle();
 
-                // After the window, not before: the view model reads the persisted language in
-                // its constructor and would overwrite an earlier switch.
+                // After the window, not before: the view model reads the persisted language and
+                // theme in its constructor and would overwrite an earlier switch. Applying the
+                // theme before the window is what made main-light.png a second copy of the dark
+                // shot for as long as that file has existed.
                 var vm = (ViewModels.MainViewModel)window.DataContext;
                 vm.SelectedLanguage = Services.Loc.Languages.First(l => l.Code == shot.Language);
+                vm.IsLightTheme = shot.Light;
+                Controls.ThemeManager.Apply(shot.Light ? Controls.AppTheme.Light : Controls.AppTheme.Dark);
                 vm.SelectedEnvironment = vm.Environments.FirstOrDefault();
                 SeedResponse(vm);
                 Settle();
@@ -282,6 +452,15 @@ public partial class App : Application
             ? VisualTreeHelper.GetChild(window, 0) as FrameworkElement ?? (FrameworkElement)window.Content
             : (FrameworkElement)window.Content;
 
+        CaptureElement(root, outputPath, window.Background);
+    }
+
+    /// <summary>
+    /// Renders one element to a PNG. Split out of <see cref="Capture"/> because a Popup's content
+    /// is not inside the window it belongs to and has to be captured on its own.
+    /// </summary>
+    private static void CaptureElement(FrameworkElement root, string outputPath, Brush behind = null)
+    {
         root.UpdateLayout();
         ForceOpaque(root);
         root.UpdateLayout();
@@ -294,8 +473,8 @@ public partial class App : Application
         var visual = new System.Windows.Media.DrawingVisual();
         using (var context = visual.RenderOpen())
         {
-            if (window.Background != null)
-                context.DrawRectangle(window.Background, null, new Rect(0, 0, width, height));
+            if (behind != null)
+                context.DrawRectangle(behind, null, new Rect(0, 0, width, height));
             context.DrawRectangle(new System.Windows.Media.VisualBrush(root) { Stretch = System.Windows.Media.Stretch.None,
                     AlignmentX = System.Windows.Media.AlignmentX.Left, AlignmentY = System.Windows.Media.AlignmentY.Top },
                 null, new Rect(0, 0, width, height));
@@ -464,6 +643,8 @@ public partial class App : Application
                 }
             }
 
+            ListBox OpenPicker(TextBox box) => Controls.VariableAssist.OpenListFor(box);
+
             var collection = vm.Collections.FirstOrDefault();
             if (collection == null)
             {
@@ -583,6 +764,66 @@ public partial class App : Application
                 Pump();
                 return switched && Controls.ThemeManager.Current == started;
             });
+
+            // --- the {{ variable picker -----------------------------------------------------
+            // Driven through a real focused TextBox rather than by calling the behaviour: the
+            // whole point of it is what happens to the caret and the keyboard, and neither of
+            // those exists unless a window is actually up.
+            var picker = new TextBox { Width = 320, Style = Application.Current.TryFindResource("FlatTextBox") as Style };
+            var host = new Grid();
+            var previousContent = main.Content;
+            Verify("typing {{ offers the variables in scope", () =>
+            {
+                host.Children.Add(picker);
+                main.Content = host;
+                Pump();
+                picker.Focus();
+                Keyboard.Focus(picker);
+                Pump();
+
+                picker.Text = "{{";
+                picker.CaretIndex = 2;
+                // The text was set in code, so raise what typing would have raised.
+                picker.RaiseEvent(new TextChangedEventArgs(TextBoxBase.TextChangedEvent, UndoAction.None));
+                Pump();
+                return OpenPicker(picker) != null;
+            }, () => "no popup after {{");
+
+            Verify("the list carries the active environment's variables", () =>
+            {
+                var list = OpenPicker(picker);
+                var names = list?.Items.OfType<Services.VariableSuggestion>().Select(s => s.Name).ToList();
+                return names != null && names.Count > 0
+                    && names.Any(n => !n.StartsWith("$", StringComparison.Ordinal));
+            }, () => "only generators were offered");
+
+            Verify("choosing an entry writes a whole token", () =>
+            {
+                var list = OpenPicker(picker);
+                var chosen = list?.Items.OfType<Services.VariableSuggestion>()
+                    .FirstOrDefault(s => !s.Name.StartsWith("$", StringComparison.Ordinal));
+                if (chosen == null) return false;
+
+                list.SelectedItem = chosen;
+                picker.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(main), 0, Key.Enter)
+                { RoutedEvent = Keyboard.PreviewKeyDownEvent });
+                Pump();
+
+                return picker.Text == "{{" + chosen.Name + "}}"
+                       && picker.CaretIndex == picker.Text.Length
+                       && OpenPicker(picker) == null;
+            }, () => "text is '" + picker.Text + "'");
+
+            Verify("a finished token stops offering", () =>
+            {
+                picker.CaretIndex = picker.Text.Length;
+                picker.RaiseEvent(new TextChangedEventArgs(TextBoxBase.TextChangedEvent, UndoAction.None));
+                Pump();
+                return OpenPicker(picker) == null;
+            });
+
+            main.Content = previousContent;
+            Pump();
 
             // --- tidy up --------------------------------------------------------------------
             if (created != null) collection.Children.Remove(created);

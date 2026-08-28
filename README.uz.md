@@ -248,7 +248,9 @@ Kolleksiya yoki papkada sozlangan auth pastga xuddi Postman'dagidek meros bo'lib
 Postman'dagi ustunlik tartibi bilan, `{{ichma-ich}}` yechimi va dinamik generatorlar (`{{$guid}}`,
 `{{$timestamp}}`, `{{$isoTimestamp}}`, `{{$randomInt}}` — shu jumladan `{{$randomInt(1,100)}}` —
 `{{$randomFullName}}`, `{{$randomEmail}}` va yana ~40 tasi). Yechilmagan tokenlar bo'shatilmaydi,
-o'z holicha qoladi — shunda nima yetishmayotgani ko'rinadi.
+o'z holicha qoladi — shunda nima yetishmayotgani ko'rinadi. Istalgan maydonda — URL, sarlavha,
+avtorizatsiya tokeni — `{{` deb yozsangiz, ayni damda mavjud o'zgaruvchilar ro'yxati chiqadi:
+qiymati va qaysi doiradan kelgani bilan. Eslash o'rniga tanlaysiz. Ctrl+Space uni istalgan joyda ochadi.
 
 **Javob ko'ruvchi** — Chiroyli / Xom / Ko'rinish, JSON, XML/HTML va JavaScript uchun sintaksis
 bo'yash, rasmlarni ko'rsatish, `Ctrl+F` bilan qidiruv, javob sarlavhalari, cookie'lar, test
@@ -429,6 +431,8 @@ GetMan.exe --self-check                                  # barcha oynalarni qura
                                                          # yorliqlar, mavzu)
 GetMan.exe --render auth shot.png [light]                # bitta ko'rinishni ekrandan tashqarida chizish
 GetMan.exe --shots docs/images                           # hujjat skrinshotlarini qayta yaratish
+GetMan.exe --audit out-dir                               # har bir oyna, ikkala temada — kontrast
+                                                         # muammosini foydalanuvchidan oldin ko'rish uchun
 powershell -File tools/capture.ps1 -Out shot.png         # ishlab turgan dastur skrinshoti
 powershell -File tools/capture.ps1 -HoverX 115 -HoverY 244  # ...hoverni ko'rsatish uchun kursor bilan
 ```

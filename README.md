@@ -246,7 +246,9 @@ and Hawk. Auth set on a collection or folder is inherited downward exactly like 
 Postman's precedence, `{{nested}}` resolution, and the dynamic generators (`{{$guid}}`,
 `{{$timestamp}}`, `{{$isoTimestamp}}`, `{{$randomInt}}` — including `{{$randomInt(1,100)}}` —
 `{{$randomFullName}}`, `{{$randomEmail}}`, and ~40 more). Unresolved tokens are left intact
-rather than blanked, so you can see what is missing.
+rather than blanked, so you can see what is missing. Typing `{{` in any field — a URL, a header,
+an auth token — drops down what is actually in scope right now, with each value and where it comes
+from, so you pick instead of remembering. Ctrl+Space opens the same list anywhere.
 
 **Response viewer** — Pretty / Raw / Preview, syntax highlighting for JSON, XML/HTML and
 JavaScript, image rendering, `Ctrl+F` search, response headers, cookies, test results, a console
@@ -435,6 +437,8 @@ GetMan.exe --self-check                                  # builds every window, 
                                                          # search, drag, tabs, theme) in a sandbox
 GetMan.exe --render auth shot.png [light]                # render one view off-screen for design review
 GetMan.exe --shots docs/images                           # regenerate every documentation screenshot
+GetMan.exe --audit out-dir                               # every window in both themes, for catching
+                                                         # a contrast regression before a user does
 
 getman run tools/fixtures/offline-smoke.postman_collection.json -r junit -o cli.xml
                                                          # end-to-end CLI check; the fixture points

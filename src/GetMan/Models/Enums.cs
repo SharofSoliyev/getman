@@ -44,12 +44,16 @@ public enum ParamKind
     File
 }
 
+/// <summary>Where a variable came from, in the resolver's precedence order: nearest wins.</summary>
 public enum VariableScope
 {
-    Global,
-    Collection,
+    Local,
+    Data,
     Environment,
-    Local
+    Collection,
+    Global,
+    /// <summary>A {{$generator}} rather than a stored value.</summary>
+    Dynamic
 }
 
 public enum TestStatus
